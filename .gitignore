@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ai
+skills-lock.json
+.codex
+.agents
+.playwright-mcp
