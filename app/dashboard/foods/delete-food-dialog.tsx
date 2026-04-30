@@ -1,8 +1,9 @@
 "use client";
 
+import { useFormStatus } from "react-dom";
+
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -12,6 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 import { deleteFood } from "./actions";
 
@@ -20,9 +22,24 @@ type DeleteFoodDialogProps = {
   name: string;
 };
 
-export function DeleteFoodDialog({ id, name }: DeleteFoodDialogProps) {
-  const formId = `delete-food-${id}`;
+function DeleteSubmitButton() {
+  const { pending } = useFormStatus();
 
+  return (
+    <Button disabled={pending} type="submit" variant="destructive">
+      {pending ? (
+        <>
+          <Spinner data-icon="inline-start" />
+          Menghapus...
+        </>
+      ) : (
+        "Hapus"
+      )}
+    </Button>
+  );
+}
+
+export function DeleteFoodDialog({ id, name }: DeleteFoodDialogProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -39,12 +56,10 @@ export function DeleteFoodDialog({ id, name }: DeleteFoodDialogProps) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Batal</AlertDialogCancel>
-          <form action={deleteFood} id={formId}>
+          <form action={deleteFood} className="contents">
             <input name="id" type="hidden" value={id} />
+            <DeleteSubmitButton />
           </form>
-          <AlertDialogAction form={formId} type="submit" variant="destructive">
-            Hapus
-          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

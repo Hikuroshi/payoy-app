@@ -84,3 +84,7 @@ export default function CartPage() {
     </div>
   );
 }
+
+export default function CartPage() {
+  return null;
+}

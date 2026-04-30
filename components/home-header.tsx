@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Briefcase01Icon, Home01Icon, InformationCircleIcon, Mail01Icon, Menu01Icon, Login01Icon } from "@hugeicons/core-free-icons";
+import { Briefcase01Icon, Home01Icon, InformationCircleIcon, Mail01Icon, Menu01Icon, Login01Icon, UserArrowLeftRightIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -12,6 +12,7 @@ const navItems = [
   { label: "Layanan", href: "/service", icon: Briefcase01Icon },
   { label: "Tentang Kami", href: "/about", icon: InformationCircleIcon },
   { label: "Kontak", href: "/contact", icon: Mail01Icon },
+  { label: "Demo sebagai pelanggan", href: "/demo-customer", icon: UserArrowLeftRightIcon },
 ];
 
 export function Header() {
@@ -33,7 +34,7 @@ export function Header() {
           </nav>
 
           <Button asChild size="lg">
-            <Link href="/dashboard">Demo aplikasi</Link>
+            <Link href="/dashboard">Dashboard</Link>
           </Button>
         </div>
 
@@ -65,7 +66,7 @@ export function Header() {
                 <Button asChild className="w-full">
                   <Link href="/dashboard">
                     <HugeiconsIcon icon={Login01Icon} strokeWidth={2} data-icon="inline-start" />
-                    Demo aplikasi
+                    Dashboard
                   </Link>
                 </Button>
               </SheetFooter>
