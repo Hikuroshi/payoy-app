@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PendingButton } from "@/components/pending-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -66,7 +67,12 @@ export function UserForm({ action, mode, user }: UserFormProps) {
           <Button asChild variant="outline">
             <Link href="/dashboard/users">Batal</Link>
           </Button>
-          <Button type="submit">{isEdit ? "Simpan perubahan" : "Buat user"}</Button>
+          <PendingButton
+            pendingText={isEdit ? "Menyimpan..." : "Membuat..."}
+            type="submit"
+          >
+            {isEdit ? "Simpan perubahan" : "Buat user"}
+          </PendingButton>
         </CardFooter>
       </form>
     </Card>

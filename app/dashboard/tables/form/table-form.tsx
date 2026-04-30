@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PendingButton } from "@/components/pending-button";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -64,9 +65,12 @@ export function TableForm({ action, mode, table }: TableFormProps) {
           <Button asChild variant="outline">
             <Link href="/dashboard/tables">Batal</Link>
           </Button>
-          <Button type="submit">
+          <PendingButton
+            pendingText={isEdit ? "Menyimpan..." : "Membuat..."}
+            type="submit"
+          >
             {isEdit ? "Simpan perubahan" : "Buat meja"}
-          </Button>
+          </PendingButton>
         </CardFooter>
       </form>
     </Card>

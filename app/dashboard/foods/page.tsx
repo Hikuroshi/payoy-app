@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { StatusToast } from "@/components/status-toast";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,39 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
+function getInitials(value: string) {
+  return value
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+}
+
+function FoodThumbnail({ food }: { food: Food }) {
+  if (!food.imageUrl) {
+    return (
+      <div className="flex size-12 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+        {getInitials(food.name)}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative size-12 overflow-hidden rounded-md border bg-muted">
+      <Image
+        alt={food.name}
+        className="object-cover"
+        fill
+        sizes="48px"
+        src={food.imageUrl}
+        unoptimized
+      />
+    </div>
+  );
+}
+
 function FoodsList({ foods }: { foods: Food[] }) {
   if (!foods.length) {
     return (
@@ -68,11 +102,15 @@ function FoodsList({ foods }: { foods: Food[] }) {
         {foods.map((food) => (
           <TableRow key={food.id}>
             <TableCell>
-              <div className="flex min-w-44 flex-col gap-1">
-                <span className="font-medium">{food.name}</span>
-                <span className="text-[0.625rem] text-muted-foreground">
-                  Dibuat {new Date(food.createdAt).toLocaleDateString("id-ID")}
-                </span>
+              <div className="flex min-w-44 items-center gap-3">
+                <FoodThumbnail food={food} />
+                <div className="flex min-w-0 flex-col gap-1">
+                  <span className="truncate font-medium">{food.name}</span>
+                  <span className="text-[0.625rem] text-muted-foreground">
+                    Dibuat{" "}
+                    {new Date(food.createdAt).toLocaleDateString("id-ID")}
+                  </span>
+                </div>
               </div>
             </TableCell>
             <TableCell className="text-muted-foreground">

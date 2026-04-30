@@ -2,10 +2,14 @@ import "server-only";
 
 import { createClient } from "@/lib/server";
 
+const menuImageBucket = "menu_image";
+
 export type Food = {
   id: string;
   name: string;
   description: string;
+  imagePath: string;
+  imageUrl: string;
   price: number;
   isAvailable: boolean;
   createdAt: string;
@@ -15,10 +19,23 @@ type FoodRow = {
   id: string;
   name: string;
   description: string | null;
+  image_path: string | null;
   price: number | string;
   is_available: boolean;
   created_at: string;
 };
+
+function getPublicImageUrl(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  path: string | null
+) {
+  if (!path) {
+    return "";
+  }
+
+  return supabase.storage.from(menuImageBucket).getPublicUrl(path).data
+    .publicUrl;
+}
 
 export async function getOwnerFoods(ownerId: string): Promise<{
   error?: string;
@@ -27,7 +44,7 @@ export async function getOwnerFoods(ownerId: string): Promise<{
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("foods")
-    .select("id, name, description, price, is_available, created_at")
+    .select("id, name, description, image_path, price, is_available, created_at")
     .eq("owner_id", ownerId)
     .order("name", { ascending: true })
     .returns<FoodRow[]>();
@@ -41,6 +58,8 @@ export async function getOwnerFoods(ownerId: string): Promise<{
       id: food.id,
       name: food.name,
       description: food.description ?? "",
+      imagePath: food.image_path ?? "",
+      imageUrl: getPublicImageUrl(supabase, food.image_path),
       price: Number(food.price),
       isAvailable: food.is_available,
       createdAt: food.created_at,
@@ -58,7 +77,7 @@ export async function getOwnerFood(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("foods")
-    .select("id, name, description, price, is_available, created_at")
+    .select("id, name, description, image_path, price, is_available, created_at")
     .eq("id", id)
     .eq("owner_id", ownerId)
     .maybeSingle<FoodRow>();
@@ -76,6 +95,8 @@ export async function getOwnerFood(
       id: data.id,
       name: data.name,
       description: data.description ?? "",
+      imagePath: data.image_path ?? "",
+      imageUrl: getPublicImageUrl(supabase, data.image_path),
       price: Number(data.price),
       isAvailable: data.is_available,
       createdAt: data.created_at,

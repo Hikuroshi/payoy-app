@@ -137,11 +137,15 @@ create table if not exists public.foods (
   owner_id uuid not null references public.users(id) on delete cascade,
   name text not null,
   description text,
+  image_path text,
   price numeric(12, 2) not null default 0 check (price >= 0),
   is_available boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.foods
+add column if not exists image_path text;
 
 create index if not exists restaurant_tables_owner_id_idx
 on public.restaurant_tables (owner_id);
@@ -215,4 +219,70 @@ with check (
     where users.id = (select auth.uid())
       and users.role = 'owner'
   )
+);
+
+insert into storage.buckets (
+  id,
+  name,
+  public,
+  file_size_limit,
+  allowed_mime_types
+)
+values (
+  'menu_image',
+  'menu_image',
+  true,
+  1048576,
+  array['image/*']
+)
+on conflict (id) do update
+set public = true,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Menu images are readable" on storage.objects;
+create policy "Menu images are readable"
+on storage.objects
+for select
+to anon, authenticated
+using (bucket_id = 'menu_image');
+
+drop policy if exists "Owners can upload menu images" on storage.objects;
+create policy "Owners can upload menu images"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'menu_image'
+  and (storage.foldername(name))[1] = (select auth.uid())::text
+  and exists (
+    select 1
+    from public.users
+    where users.id = (select auth.uid())
+      and users.role = 'owner'
+  )
+);
+
+drop policy if exists "Owners can update menu images" on storage.objects;
+create policy "Owners can update menu images"
+on storage.objects
+for update
+to authenticated
+using (
+  bucket_id = 'menu_image'
+  and (storage.foldername(name))[1] = (select auth.uid())::text
+)
+with check (
+  bucket_id = 'menu_image'
+  and (storage.foldername(name))[1] = (select auth.uid())::text
+);
+
+drop policy if exists "Owners can delete menu images" on storage.objects;
+create policy "Owners can delete menu images"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'menu_image'
+  and (storage.foldername(name))[1] = (select auth.uid())::text
 );
