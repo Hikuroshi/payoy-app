@@ -8,7 +8,7 @@ import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CommandIcon, DashboardSquare01Icon, DiningTableIcon, MenuRestaurantIcon, Settings05Icon, UserGroupIcon } from "@hugeicons/core-free-icons";
+import { CommandIcon, DashboardSquare01Icon, DiningTableIcon, MenuRestaurantIcon, Settings05Icon, UserArrowLeftRightIcon, UserGroupIcon } from "@hugeicons/core-free-icons";
 import type { CurrentUserProfile } from "@/lib/auth/profile";
 
 const data = {
@@ -57,6 +57,11 @@ export function AppSidebar({
             title: "Makanan",
             url: "/dashboard/foods",
             icon: <HugeiconsIcon icon={MenuRestaurantIcon} strokeWidth={2} />,
+          },
+          {
+            title: "Demo sebagai pelanggan",
+            url: "/demo-customer",
+            icon: <HugeiconsIcon icon={UserArrowLeftRightIcon} strokeWidth={2} />,
           },
         ]
       : []),

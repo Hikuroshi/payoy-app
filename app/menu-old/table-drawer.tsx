@@ -6,7 +6,7 @@ import { ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 
-export function TableDrawer({ tableNumber }: { tableNumber: string }) {
+export function TableDrawer() {
   const [open, setOpen] = React.useState(true);
 
   return (
@@ -14,7 +14,7 @@ export function TableDrawer({ tableNumber }: { tableNumber: string }) {
       <DrawerContent className="min-h-svh">
         <div className="mx-auto flex min-h-svh w-full max-w-sm flex-col items-center justify-center px-4 text-center">
           <DrawerHeader className="p-0">
-            <DrawerTitle className="text-2xl font-extrabold leading-tight tracking-tight">Meja #{tableNumber} tersedia!</DrawerTitle>
+            <DrawerTitle className="text-2xl font-extrabold leading-tight tracking-tight">Meja #02 tersedia!</DrawerTitle>
             <DrawerDescription className="sr-only">Informasi meja tersedia</DrawerDescription>
           </DrawerHeader>
 
