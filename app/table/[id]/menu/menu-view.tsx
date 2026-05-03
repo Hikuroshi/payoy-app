@@ -1,15 +1,18 @@
 "use client";
 
+import Image from "next/image";
 import * as React from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export type PublicMenuFood = {
   id: string;
   name: string;
   description: string;
+  imageUrl: string;
   price: number;
 };
 
@@ -28,46 +31,39 @@ function getInitials(value: string) {
 }
 
 function MenuImagePlaceholder({ name }: { name: string }) {
+  return <div className="flex aspect-square items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">{getInitials(name)}</div>;
+}
+
+function MenuImage({ item }: { item: PublicMenuFood }) {
+  const [loaded, setLoaded] = React.useState(false);
+  const [failed, setFailed] = React.useState(false);
+
+  if (!item.imageUrl || failed) {
+    return <MenuImagePlaceholder name={item.name} />;
+  }
+
   return (
-    <div className="flex aspect-square items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
-      {getInitials(name)}
+    <div className="relative aspect-square overflow-hidden rounded-md bg-muted">
+      {!loaded ? <Skeleton className="absolute inset-0 rounded-none" /> : null}
+      <Image alt={item.name} className="object-cover" fill onError={() => setFailed(true)} onLoad={() => setLoaded(true)} sizes="(max-width: 640px) 72px, 84px" src={item.imageUrl} unoptimized />
     </div>
   );
 }
 
-function MenuItemCard({
-  item,
-  onAdd,
-}: {
-  item: PublicMenuFood;
-  onAdd: (item: PublicMenuFood) => void;
-}) {
+function MenuItemCard({ item, onAdd }: { item: PublicMenuFood; onAdd: (item: PublicMenuFood) => void }) {
   return (
     <Card className="overflow-hidden p-0">
       <CardContent className="grid grid-cols-[72px_1fr] gap-3 p-2.5 sm:grid-cols-[84px_1fr]">
-        <MenuImagePlaceholder name={item.name} />
+        <MenuImage item={item} />
 
         <div className="flex min-w-0 flex-col items-start justify-center">
-          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
-            {item.name}
-          </h3>
+          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">{item.name}</h3>
 
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {formatPrice(item.price)}
-          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{formatPrice(item.price)}</p>
 
-          {item.description ? (
-            <p className="mt-1 line-clamp-1 text-[0.625rem] text-muted-foreground">
-              {item.description}
-            </p>
-          ) : null}
+          {item.description ? <p className="mt-1 line-clamp-1 text-[0.625rem] text-muted-foreground">{item.description}</p> : null}
 
-          <Button
-            type="button"
-            size="sm"
-            className="mt-2 h-7 min-w-20 px-3 text-xs"
-            onClick={() => onAdd(item)}
-          >
+          <Button type="button" size="sm" className="mt-2 h-7 min-w-20 px-3 text-xs" onClick={() => onAdd(item)}>
             Tambah
           </Button>
         </div>
@@ -103,15 +99,7 @@ function CheckoutBar({ count, total }: { count: number; total: number }) {
   );
 }
 
-export function MenuView({
-  errorMessage,
-  foods,
-  tableNumber,
-}: {
-  errorMessage?: string;
-  foods: PublicMenuFood[];
-  tableNumber: string;
-}) {
+export function MenuView({ errorMessage, foods, tableNumber }: { errorMessage?: string; foods: PublicMenuFood[]; tableNumber: string }) {
   const [cartSummary, setCartSummary] = React.useState({
     count: 0,
     total: 0,
@@ -123,10 +111,7 @@ export function MenuView({
       total: current.total + item.price,
     }));
 
-    toast.success("Item ditambahkan", {
-      description: `${item.name} masuk ke checkout.`,
-      duration: 1800,
-    });
+    toast.success(`${item.name} ditambahkan ke keranjang`, { position: "top-center", duration: 1800 });
   }
 
   return (
@@ -134,46 +119,28 @@ export function MenuView({
       <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col bg-background px-4 pb-28 pt-4 sm:px-5 md:px-6">
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-2xl font-extrabold leading-tight tracking-normal sm:text-3xl">
-              Menu
-            </h1>
+            <h1 className="text-2xl font-extrabold leading-tight tracking-normal sm:text-3xl">Menu</h1>
 
-            {errorMessage ? (
-              <p className="mt-1.5 max-w-xl text-xs text-muted-foreground sm:text-sm">
-                {errorMessage}
-              </p>
-            ) : null}
+            {errorMessage ? <p className="mt-1.5 max-w-xl text-xs text-muted-foreground sm:text-sm">{errorMessage}</p> : null}
           </div>
 
-          <p className="shrink-0 pt-1 text-sm font-extrabold text-muted-foreground sm:text-base">
-            Meja #{tableNumber}
-          </p>
+          <p className="shrink-0 pt-1 text-sm font-extrabold text-muted-foreground sm:text-base">Meja #{tableNumber}</p>
         </header>
 
         <section className="mt-5">
           <div className="flex items-end justify-between gap-3">
-            <h2 className="min-w-0 truncate text-xl font-extrabold leading-tight tracking-normal sm:text-2xl">
-              Menu Makanan
-            </h2>
+            <h2 className="min-w-0 truncate text-xl font-extrabold leading-tight tracking-normal sm:text-2xl">Menu Makanan</h2>
           </div>
 
           <div className="mt-3.5">
             {foods.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                 {foods.map((item) => (
-                  <MenuItemCard
-                    key={item.id}
-                    item={item}
-                    onAdd={handleAddItem}
-                  />
+                  <MenuItemCard key={item.id} item={item} onAdd={handleAddItem} />
                 ))}
               </div>
             ) : (
-              <MenuEmptyState
-                message={
-                  errorMessage ?? "Menu belum tersedia untuk meja ini."
-                }
-              />
+              <MenuEmptyState message={errorMessage ?? "Menu belum tersedia untuk meja ini."} />
             )}
           </div>
         </section>

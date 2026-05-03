@@ -1,8 +1,9 @@
 "use client";
 
+import { useFormStatus } from "react-dom";
+
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -12,6 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 import { deleteDashboardUser } from "./actions";
 
@@ -20,9 +22,24 @@ type DeleteUserDialogProps = {
   name: string;
 };
 
-export function DeleteUserDialog({ id, name }: DeleteUserDialogProps) {
-  const formId = `delete-user-${id}`;
+function DeleteSubmitButton() {
+  const { pending } = useFormStatus();
 
+  return (
+    <Button disabled={pending} type="submit" variant="destructive">
+      {pending ? (
+        <>
+          <Spinner data-icon="inline-start" />
+          Menghapus...
+        </>
+      ) : (
+        "Hapus"
+      )}
+    </Button>
+  );
+}
+
+export function DeleteUserDialog({ id, name }: DeleteUserDialogProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -39,16 +56,10 @@ export function DeleteUserDialog({ id, name }: DeleteUserDialogProps) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Batal</AlertDialogCancel>
-          <form action={deleteDashboardUser} id={formId}>
+          <form action={deleteDashboardUser} className="contents">
             <input name="id" type="hidden" value={id} />
+            <DeleteSubmitButton />
           </form>
-          <AlertDialogAction
-            form={formId}
-            type="submit"
-            variant="destructive"
-          >
-            Hapus
-          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 
+import { PendingButton } from "@/components/pending-button";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -81,6 +83,25 @@ export function FoodForm({ action, food, mode }: FoodFormProps) {
                 placeholder="Opsional"
               />
             </Field>
+            <Field>
+              <FieldLabel htmlFor="image">Gambar</FieldLabel>
+              {food?.imageUrl ? (
+                <div className="relative aspect-video overflow-hidden rounded-md border bg-muted">
+                  <Image
+                    alt={food.name}
+                    className="object-cover"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 672px"
+                    src={food.imageUrl}
+                    unoptimized
+                  />
+                </div>
+              ) : null}
+              <Input accept="image/*" id="image" name="image" type="file" />
+              <FieldDescription>
+                Opsional. Gunakan gambar maksimal 1 MB.
+              </FieldDescription>
+            </Field>
             <Field orientation="horizontal">
               <Checkbox
                 defaultChecked={food?.isAvailable ?? true}
@@ -100,9 +121,12 @@ export function FoodForm({ action, food, mode }: FoodFormProps) {
           <Button asChild variant="outline">
             <Link href="/dashboard/foods">Batal</Link>
           </Button>
-          <Button type="submit">
+          <PendingButton
+            pendingText={isEdit ? "Menyimpan..." : "Membuat..."}
+            type="submit"
+          >
             {isEdit ? "Simpan perubahan" : "Buat makanan"}
-          </Button>
+          </PendingButton>
         </CardFooter>
       </form>
     </Card>

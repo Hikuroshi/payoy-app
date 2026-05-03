@@ -18,8 +18,20 @@ type FoodRow = {
   id: string;
   name: string;
   description: string | null;
+  image_path: string | null;
   price: number | string;
 };
+
+function getMenuImageUrl(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  path: string | null
+) {
+  if (!path) {
+    return "";
+  }
+
+  return supabase.storage.from("menu_image").getPublicUrl(path).data.publicUrl;
+}
 
 export default async function MenuPage({ params }: MenuPageProps) {
   const { id } = await params;
@@ -45,7 +57,7 @@ export default async function MenuPage({ params }: MenuPageProps) {
 
   const { data: foods, error: foodsError } = await supabase
     .from("foods")
-    .select("id, name, description, price")
+    .select("id, name, description, image_path, price")
     .eq("owner_id", table.owner_id)
     .eq("is_available", true)
     .order("name", { ascending: true })
@@ -55,6 +67,7 @@ export default async function MenuPage({ params }: MenuPageProps) {
     id: food.id,
     name: food.name,
     description: food.description ?? "",
+    imageUrl: getMenuImageUrl(supabase, food.image_path),
     price: Number(food.price),
   }));
 
