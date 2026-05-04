@@ -3,10 +3,14 @@ create extension if not exists pgcrypto with schema extensions;
 create table if not exists public.users (
   id uuid primary key references auth.users(id) on delete cascade,
   name text,
+  owner_id uuid references public.users(id) on delete set null,
   role text not null default 'owner' check (role in ('admin', 'owner', 'cashier')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.users
+add column if not exists owner_id uuid references public.users(id) on delete set null;
 
 alter table public.users enable row level security;
 
@@ -16,6 +20,16 @@ on public.users
 for select
 to authenticated
 using ((select auth.uid()) = id);
+
+drop policy if exists "Owners can read own cashiers" on public.users;
+create policy "Owners can read own cashiers"
+on public.users
+for select
+to authenticated
+using (
+  owner_id = (select auth.uid())
+  and role = 'cashier'
+);
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -120,6 +134,7 @@ values (
 )
 on conflict (id) do update
 set name = excluded.name,
+    owner_id = null,
     role = excluded.role,
     updated_at = now();
 
@@ -155,6 +170,9 @@ on public.foods (owner_id);
 
 create index if not exists foods_owner_available_idx
 on public.foods (owner_id, is_available);
+
+create index if not exists users_owner_role_idx
+on public.users (owner_id, role);
 
 alter table public.restaurant_tables enable row level security;
 alter table public.foods enable row level security;
@@ -288,8 +306,9 @@ using (
     from public.users
     where users.id = (select auth.uid())
       and (
-        users.role in ('admin', 'cashier')
+        users.role = 'admin'
         or (users.role = 'owner' and orders.owner_id = users.id)
+        or (users.role = 'cashier' and orders.owner_id = users.owner_id)
       )
   )
 );
@@ -305,8 +324,9 @@ using (
     from public.users
     where users.id = (select auth.uid())
       and (
-        users.role in ('admin', 'cashier')
+        users.role = 'admin'
         or (users.role = 'owner' and orders.owner_id = users.id)
+        or (users.role = 'cashier' and orders.owner_id = users.owner_id)
       )
   )
 )
@@ -316,8 +336,9 @@ with check (
     from public.users
     where users.id = (select auth.uid())
       and (
-        users.role in ('admin', 'cashier')
+        users.role = 'admin'
         or (users.role = 'owner' and orders.owner_id = users.id)
+        or (users.role = 'cashier' and orders.owner_id = users.owner_id)
       )
   )
 );
@@ -341,8 +362,9 @@ using (
     join public.users on users.id = (select auth.uid())
     where orders.id = order_items.order_id
       and (
-        users.role in ('admin', 'cashier')
+        users.role = 'admin'
         or (users.role = 'owner' and orders.owner_id = users.id)
+        or (users.role = 'cashier' and orders.owner_id = users.owner_id)
       )
   )
 );

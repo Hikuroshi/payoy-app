@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
-import { clearCart, getCartTotals, getTotalQuantity, saveOrder } from "../_components/customer-cart";
+import { getCartTotals, getTotalQuantity, saveOrder } from "../_components/customer-cart";
 import { CustomerPageHeader, CustomerPageShell, EmptyCustomerState, OrderItemRow, OrderTotals } from "../_components/customer-order-ui";
 import { createCustomerOrder } from "../_components/order-actions";
 import { useCartItems } from "../_components/customer-store-hooks";
@@ -77,13 +77,7 @@ export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
 
       saveOrder(result.order);
 
-      if (method === "QRIS") {
-        router.push(`/table/${tableId}/checkout/payment/qris`);
-        return;
-      }
-
-      clearCart(tableId);
-      router.push(`/table/${tableId}/status-payment`);
+      router.push(`/table/${tableId}/checkout/payment/qris`);
     });
   }
 

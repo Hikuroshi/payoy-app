@@ -82,6 +82,14 @@ export async function updateOrderStatus(formData: FormData) {
     query = query.eq("owner_id", profile.id);
   }
 
+  if (profile.role === "cashier") {
+    if (!profile.ownerId) {
+      redirectWith("error", "Cashier belum terhubung ke owner.", parsed.data.redirectTo);
+    }
+
+    query = query.eq("owner_id", profile.ownerId);
+  }
+
   const { error } = await query;
 
   if (error) {

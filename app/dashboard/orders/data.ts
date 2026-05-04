@@ -102,6 +102,14 @@ export async function getDashboardOrders(
     query = query.eq("owner_id", profile.id);
   }
 
+  if (profile.role === "cashier") {
+    if (!profile.ownerId) {
+      return { orders: [] };
+    }
+
+    query = query.eq("owner_id", profile.ownerId);
+  }
+
   const { data, error } = await query.returns<OrderRow[]>();
 
   if (error) {
@@ -126,6 +134,14 @@ export async function getRecentOrders(
 
   if (profile.role === "owner") {
     query = query.eq("owner_id", profile.id);
+  }
+
+  if (profile.role === "cashier") {
+    if (!profile.ownerId) {
+      return [];
+    }
+
+    query = query.eq("owner_id", profile.ownerId);
   }
 
   const { data } = await query.returns<OrderRow[]>();

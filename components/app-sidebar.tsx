@@ -73,6 +73,11 @@ export function AppSidebar({
             icon: <HugeiconsIcon icon={MenuRestaurantIcon} strokeWidth={2} />,
           },
           {
+            title: "Cashier",
+            url: "/dashboard/cashiers",
+            icon: <HugeiconsIcon icon={UserGroupIcon} strokeWidth={2} />,
+          },
+          {
             title: "Demo sebagai pelanggan",
             url: "/demo-customer",
             icon: <HugeiconsIcon icon={UserArrowLeftRightIcon} strokeWidth={2} />,

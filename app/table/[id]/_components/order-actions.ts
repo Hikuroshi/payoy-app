@@ -122,11 +122,10 @@ export async function createCustomerOrder(
   const tax = Math.round(subtotal * 0.1);
   const total = subtotal + adminFee + tax;
   const createdAt = new Date();
-  const paidAt = paymentMethod === "E-Wallet" ? createdAt.toISOString() : null;
+  const paidAt = null;
   const orderId = crypto.randomUUID();
   const code = createOrderCode();
-  const status: CustomerOrderStatus =
-    paymentMethod === "E-Wallet" ? "paid" : "waiting_payment";
+  const status: CustomerOrderStatus = "waiting_payment";
 
   const { error: orderError } = await supabase.from("orders").insert({
     admin_fee: adminFee,

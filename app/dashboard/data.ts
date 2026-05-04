@@ -48,6 +48,14 @@ async function getOrderCount(
     query = query.eq("owner_id", profile.id);
   }
 
+  if (profile.role === "cashier") {
+    if (!profile.ownerId) {
+      return 0;
+    }
+
+    query = query.eq("owner_id", profile.ownerId);
+  }
+
   const { count } = await query;
 
   return count ?? 0;
@@ -62,6 +70,14 @@ async function getRevenue(profile: CurrentUserProfile) {
 
   if (profile.role === "owner") {
     query = query.eq("owner_id", profile.id);
+  }
+
+  if (profile.role === "cashier") {
+    if (!profile.ownerId) {
+      return 0;
+    }
+
+    query = query.eq("owner_id", profile.ownerId);
   }
 
   const { data } = await query.returns<{ total: number | string }[]>();
@@ -81,6 +97,14 @@ async function getOwnerResourceCount(
 
   if (profile.role === "owner") {
     query = query.eq("owner_id", profile.id);
+  }
+
+  if (profile.role === "cashier") {
+    if (!profile.ownerId) {
+      return 0;
+    }
+
+    query = query.eq("owner_id", profile.ownerId);
   }
 
   if (table === "foods") {

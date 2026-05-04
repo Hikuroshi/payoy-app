@@ -1,6 +1,6 @@
 "use client";
 
-import { Download01Icon } from "@hugeicons/core-free-icons";
+import { Download01Icon, Wallet01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -160,19 +160,31 @@ export function QrisPaymentView({
     <CustomerPageShell>
       <CustomerPageHeader
         backHref={`/table/${tableId}/checkout`}
-        description={`Berlaku sampai ${formatDateTime(order.expiryAt)}.`}
+        description={`Metode ${order.paymentMethod}. Berlaku sampai ${formatDateTime(order.expiryAt)}.`}
         tableNumber={tableNumber}
-        title="QRIS"
+        title="Menunggu pembayaran"
       />
 
       <Card className="mx-auto w-full max-w-sm text-center">
         <CardHeader>
-          <CardTitle>Payoy</CardTitle>
+          <CardTitle>Menunggu pembayaran</CardTitle>
           <CardDescription>{order.id}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-5">
           <p className="text-3xl font-black">{formatPrice(order.total)}</p>
-          <QrisCode />
+          {order.paymentMethod === "QRIS" ? (
+            <QrisCode />
+          ) : (
+            <div className="flex size-56 flex-col items-center justify-center gap-3 rounded-md border bg-background p-6">
+              <HugeiconsIcon className="text-primary" icon={Wallet01Icon} size={56} />
+              <div className="flex flex-col gap-1">
+                <p className="font-semibold">E-Wallet</p>
+                <p className="text-xs text-muted-foreground">
+                  Tekan tombol Bayar untuk menyelesaikan pembayaran.
+                </p>
+              </div>
+            </div>
+          )}
           <div className="flex w-full flex-col gap-2">
             <Button disabled={isPending} onClick={handlePaid} type="button">
               {isPending ? (
@@ -181,13 +193,15 @@ export function QrisPaymentView({
                   Menyimpan
                 </>
               ) : (
-                "Saya sudah bayar"
+                "Bayar"
               )}
             </Button>
-            <Button onClick={handleDownload} type="button" variant="outline">
-              <HugeiconsIcon icon={Download01Icon} data-icon="inline-start" />
-              Unduh QRIS
-            </Button>
+            {order.paymentMethod === "QRIS" ? (
+              <Button onClick={handleDownload} type="button" variant="outline">
+                <HugeiconsIcon icon={Download01Icon} data-icon="inline-start" />
+                Unduh QRIS
+              </Button>
+            ) : null}
             <Button asChild variant="outline">
               <Link href={`/table/${tableId}/checkout`}>
                 Ganti metode pembayaran
