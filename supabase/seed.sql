@@ -221,6 +221,132 @@ with check (
   )
 );
 
+create table if not exists public.orders (
+  id uuid primary key default extensions.gen_random_uuid(),
+  code text not null unique,
+  owner_id uuid not null references public.users(id) on delete cascade,
+  table_id uuid not null references public.restaurant_tables(id) on delete cascade,
+  table_number text not null,
+  payment_method text not null check (payment_method in ('QRIS', 'E-Wallet')),
+  status text not null default 'waiting_payment' check (status in ('waiting_payment', 'paid', 'processing', 'done', 'cancelled')),
+  subtotal numeric(12, 2) not null default 0 check (subtotal >= 0),
+  admin_fee numeric(12, 2) not null default 0 check (admin_fee >= 0),
+  tax numeric(12, 2) not null default 0 check (tax >= 0),
+  total numeric(12, 2) not null default 0 check (total >= 0),
+  paid_at timestamptz,
+  completed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.order_items (
+  id uuid primary key default extensions.gen_random_uuid(),
+  order_id uuid not null references public.orders(id) on delete cascade,
+  food_id uuid references public.foods(id) on delete set null,
+  food_name text not null,
+  note text,
+  price numeric(12, 2) not null default 0 check (price >= 0),
+  quantity integer not null default 1 check (quantity > 0),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists orders_owner_status_created_idx
+on public.orders (owner_id, status, created_at desc);
+
+create index if not exists orders_table_id_idx
+on public.orders (table_id);
+
+create index if not exists order_items_order_id_idx
+on public.order_items (order_id);
+
+alter table public.orders enable row level security;
+alter table public.order_items enable row level security;
+
+drop policy if exists "Customers can create orders" on public.orders;
+create policy "Customers can create orders"
+on public.orders
+for insert
+to anon, authenticated
+with check (status in ('waiting_payment', 'paid'));
+
+drop policy if exists "Customers can mark orders paid" on public.orders;
+create policy "Customers can mark orders paid"
+on public.orders
+for update
+to anon, authenticated
+using (status = 'waiting_payment')
+with check (status = 'paid');
+
+drop policy if exists "Staff can read orders" on public.orders;
+create policy "Staff can read orders"
+on public.orders
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.users
+    where users.id = (select auth.uid())
+      and (
+        users.role in ('admin', 'cashier')
+        or (users.role = 'owner' and orders.owner_id = users.id)
+      )
+  )
+);
+
+drop policy if exists "Staff can update orders" on public.orders;
+create policy "Staff can update orders"
+on public.orders
+for update
+to authenticated
+using (
+  exists (
+    select 1
+    from public.users
+    where users.id = (select auth.uid())
+      and (
+        users.role in ('admin', 'cashier')
+        or (users.role = 'owner' and orders.owner_id = users.id)
+      )
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.users
+    where users.id = (select auth.uid())
+      and (
+        users.role in ('admin', 'cashier')
+        or (users.role = 'owner' and orders.owner_id = users.id)
+      )
+  )
+);
+
+drop policy if exists "Customers can create order items" on public.order_items;
+create policy "Customers can create order items"
+on public.order_items
+for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "Staff can read order items" on public.order_items;
+create policy "Staff can read order items"
+on public.order_items
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.orders
+    join public.users on users.id = (select auth.uid())
+    where orders.id = order_items.order_id
+      and (
+        users.role in ('admin', 'cashier')
+        or (users.role = 'owner' and orders.owner_id = users.id)
+      )
+  )
+);
+
 insert into storage.buckets (
   id,
   name,

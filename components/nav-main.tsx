@@ -10,7 +10,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-function isActivePath(pathname: string, url: string) {
+function matchesPath(pathname: string, url: string) {
   if (url === "/dashboard") {
     return pathname === url
   }
@@ -28,6 +28,9 @@ export function NavMain({
   }[]
 }) {
   const pathname = usePathname()
+  const activeUrl = items
+    .filter((item) => matchesPath(pathname, item.url))
+    .sort((a, b) => b.url.length - a.url.length)[0]?.url
 
   return (
     <SidebarGroup>
@@ -37,7 +40,7 @@ export function NavMain({
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 tooltip={item.title}
-                isActive={isActivePath(pathname, item.url)}
+                isActive={activeUrl === item.url}
                 asChild
               >
                 <Link href={item.url}>

@@ -1,5 +1,5 @@
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createClient } from "@/lib/server";
+import { createPublicClient } from "@/lib/public-server";
 
 import { MenuView, type PublicMenuFood } from "./menu-view";
 import { TableDrawer } from "./table-drawer";
@@ -23,7 +23,7 @@ type FoodRow = {
 };
 
 function getMenuImageUrl(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createPublicClient>,
   path: string | null
 ) {
   if (!path) {
@@ -35,7 +35,7 @@ function getMenuImageUrl(
 
 export default async function MenuPage({ params }: MenuPageProps) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data: table, error: tableError } = await supabase
     .from("restaurant_tables")
     .select("id, number, owner_id")
@@ -76,6 +76,7 @@ export default async function MenuPage({ params }: MenuPageProps) {
       <MenuView
         errorMessage={foodsError ? "Gagal memuat menu." : undefined}
         foods={menuFoods}
+        tableId={table.id}
         tableNumber={table.number}
       />
       <TableDrawer tableNumber={table.number} />

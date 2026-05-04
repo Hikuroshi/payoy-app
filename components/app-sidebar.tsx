@@ -8,7 +8,7 @@ import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CommandIcon, DashboardSquare01Icon, DiningTableIcon, MenuRestaurantIcon, Settings05Icon, UserArrowLeftRightIcon, UserGroupIcon } from "@hugeicons/core-free-icons";
+import { Clock01Icon, CommandIcon, DashboardSquare01Icon, DiningTableIcon, LeftToRightListBulletIcon, MenuRestaurantIcon, Settings05Icon, UserArrowLeftRightIcon, UserGroupIcon } from "@hugeicons/core-free-icons";
 import type { CurrentUserProfile } from "@/lib/auth/profile";
 
 const data = {
@@ -43,6 +43,20 @@ export function AppSidebar({
             title: "Pengguna",
             url: "/dashboard/users",
             icon: <HugeiconsIcon icon={UserGroupIcon} strokeWidth={2} />,
+          },
+        ]
+      : []),
+    ...(user?.role === "owner" || user?.role === "cashier"
+      ? [
+          {
+            title: "Pesanan",
+            url: "/dashboard/orders",
+            icon: <HugeiconsIcon icon={LeftToRightListBulletIcon} strokeWidth={2} />,
+          },
+          {
+            title: "History Pesanan",
+            url: "/dashboard/orders/history",
+            icon: <HugeiconsIcon icon={Clock01Icon} strokeWidth={2} />,
           },
         ]
       : []),

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import * as React from "react";
 import { toast } from "sonner";
@@ -8,6 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import {
+  addCartItem,
+  formatPrice,
+  getCartTotals,
+  getTotalQuantity,
+} from "../_components/customer-cart";
+import { useCartItems } from "../_components/customer-store-hooks";
+
 export type PublicMenuFood = {
   id: string;
   name: string;
@@ -15,10 +24,6 @@ export type PublicMenuFood = {
   imageUrl: string;
   price: number;
 };
-
-function formatPrice(value: number) {
-  return `Rp ${value.toLocaleString("id-ID")}`;
-}
 
 function getInitials(value: string) {
   return value
@@ -82,7 +87,15 @@ function MenuEmptyState({ message }: { message: string }) {
   );
 }
 
-function CheckoutBar({ count, total }: { count: number; total: number }) {
+function CheckoutBar({
+  count,
+  href,
+  total,
+}: {
+  count: number;
+  href: string;
+  total: number;
+}) {
   return (
     <div className="fixed inset-x-0 bottom-0 border-t bg-background/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-4 py-3 sm:px-5 md:px-6">
@@ -91,26 +104,37 @@ function CheckoutBar({ count, total }: { count: number; total: number }) {
           <span>{formatPrice(total)}</span>
         </div>
 
-        <Button type="button" size="sm" className="w-full" disabled={count === 0}>
-          Checkout
-        </Button>
+        {count > 0 ? (
+          <Button asChild size="sm" className="w-full">
+            <Link href={href}>Checkout</Link>
+          </Button>
+        ) : (
+          <Button type="button" size="sm" className="w-full" disabled>
+            Checkout
+          </Button>
+        )}
       </div>
     </div>
   );
 }
 
-export function MenuView({ errorMessage, foods, tableNumber }: { errorMessage?: string; foods: PublicMenuFood[]; tableNumber: string }) {
-  const [cartSummary, setCartSummary] = React.useState({
-    count: 0,
-    total: 0,
-  });
+export function MenuView({
+  errorMessage,
+  foods,
+  tableId,
+  tableNumber,
+}: {
+  errorMessage?: string;
+  foods: PublicMenuFood[];
+  tableId: string;
+  tableNumber: string;
+}) {
+  const cartItems = useCartItems(tableId);
+  const cartTotals = getCartTotals(cartItems);
+  const cartCount = getTotalQuantity(cartItems);
 
   function handleAddItem(item: PublicMenuFood) {
-    setCartSummary((current) => ({
-      count: current.count + 1,
-      total: current.total + item.price,
-    }));
-
+    addCartItem(tableId, item);
     toast.success(`${item.name} ditambahkan ke keranjang`, { position: "top-center", duration: 1800 });
   }
 
@@ -146,7 +170,11 @@ export function MenuView({ errorMessage, foods, tableNumber }: { errorMessage?: 
         </section>
       </div>
 
-      <CheckoutBar count={cartSummary.count} total={cartSummary.total} />
+      <CheckoutBar
+        count={cartCount}
+        href={`/table/${tableId}/cart`}
+        total={cartTotals.subtotal}
+      />
     </div>
   );
 }

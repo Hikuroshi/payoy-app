@@ -74,3 +74,13 @@ export async function requireOwnerProfile(): Promise<CurrentUserProfile> {
 
   return profile;
 }
+
+export async function requireOrderStaffProfile(): Promise<CurrentUserProfile> {
+  const profile = await requireUserProfile();
+
+  if (profile.role !== "owner" && profile.role !== "cashier") {
+    redirect("/dashboard");
+  }
+
+  return profile;
+}
