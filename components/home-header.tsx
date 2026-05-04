@@ -7,15 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import Image from "next/image";
 
-const navItems = [
-  { label: "Beranda", href: "/", icon: Home01Icon },
-  { label: "Layanan", href: "/service", icon: Briefcase01Icon },
-  { label: "Tentang Kami", href: "/about", icon: InformationCircleIcon },
-  { label: "Kontak", href: "/contact", icon: Mail01Icon },
-  { label: "Demo sebagai pelanggan", href: "/demo-customer", icon: UserArrowLeftRightIcon },
-];
+function getNavItems(demoCustomerHref: string) {
+  return [
+    { label: "Beranda", href: "/", icon: Home01Icon },
+    { label: "Layanan", href: "/service", icon: Briefcase01Icon },
+    { label: "Tentang Kami", href: "/about", icon: InformationCircleIcon },
+    { label: "Kontak", href: "/contact", icon: Mail01Icon },
+    {
+      label: "Demo sebagai pelanggan",
+      href: demoCustomerHref,
+      icon: UserArrowLeftRightIcon,
+    },
+  ];
+}
 
-export function Header() {
+export function Header({ demoCustomerHref = "/dashboard" }: { demoCustomerHref?: string }) {
+  const navItems = getNavItems(demoCustomerHref);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">

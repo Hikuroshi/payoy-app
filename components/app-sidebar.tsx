@@ -26,9 +26,11 @@ const data = {
 };
 
 export function AppSidebar({
+  demoCustomerHref = "/dashboard/tables",
   user,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
+  demoCustomerHref?: string;
   user?: CurrentUserProfile;
 }) {
   const navMain = [
@@ -79,7 +81,7 @@ export function AppSidebar({
           },
           {
             title: "Demo sebagai pelanggan",
-            url: "/demo-customer",
+            url: demoCustomerHref,
             icon: <HugeiconsIcon icon={UserArrowLeftRightIcon} strokeWidth={2} />,
           },
         ]

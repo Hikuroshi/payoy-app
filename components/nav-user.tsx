@@ -64,7 +64,7 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <form action={logout}>
-              <button type="submit">
+              <button type="submit" className="w-full">
                 <DropdownMenuItem>
                   <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />
                   Log out
