@@ -1,4 +1,4 @@
-import { TableNotFound } from "../_components/customer-order-ui";
+import { notFound } from "next/navigation";
 import { getPublicTable } from "../_components/table-data";
 
 import { CartView } from "./cart-view";
@@ -12,7 +12,7 @@ export default async function CartPage({ params }: CartPageProps) {
   const table = await getPublicTable(id);
 
   if (!table) {
-    return <TableNotFound />;
+    notFound();
   }
 
   return <CartView tableId={table.id} tableNumber={table.number} />;

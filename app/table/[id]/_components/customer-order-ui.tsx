@@ -220,16 +220,3 @@ export function CustomerPageSkeleton() {
     </CustomerPageShell>
   );
 }
-
-export function TableNotFound() {
-  return (
-    <main className="flex min-h-svh items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm text-center">
-        <CardHeader>
-          <CardTitle>Meja tidak ditemukan</CardTitle>
-          <CardDescription>Periksa kembali QR atau link meja.</CardDescription>
-        </CardHeader>
-      </Card>
-    </main>
-  );
-}

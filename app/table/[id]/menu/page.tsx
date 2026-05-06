@@ -1,4 +1,4 @@
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { notFound } from "next/navigation";
 import { createPublicClient } from "@/lib/public-server";
 
 import { MenuView, type PublicMenuFood } from "./menu-view";
@@ -43,16 +43,7 @@ export default async function MenuPage({ params }: MenuPageProps) {
     .maybeSingle<RestaurantTableRow>();
 
   if (tableError || !table) {
-    return (
-      <main className="flex min-h-svh items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-sm text-center">
-          <CardHeader>
-            <CardTitle>Meja tidak ditemukan</CardTitle>
-            <CardDescription>Periksa kembali QR atau link meja.</CardDescription>
-          </CardHeader>
-        </Card>
-      </main>
-    );
+    notFound();
   }
 
   const { data: foods, error: foodsError } = await supabase

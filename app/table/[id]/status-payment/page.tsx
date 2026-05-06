@@ -1,4 +1,4 @@
-import { TableNotFound } from "../_components/customer-order-ui";
+import { notFound } from "next/navigation";
 import { getPublicTable } from "../_components/table-data";
 
 import { PaymentStatusView } from "./payment-status-view";
@@ -14,7 +14,7 @@ export default async function PaymentStatusPage({
   const table = await getPublicTable(id);
 
   if (!table) {
-    return <TableNotFound />;
+    notFound();
   }
 
   return <PaymentStatusView tableId={table.id} tableNumber={table.number} />;

@@ -1,4 +1,4 @@
-import { TableNotFound } from "../_components/customer-order-ui";
+import { notFound } from "next/navigation";
 import { getPublicTable } from "../_components/table-data";
 
 import { CheckoutView } from "./checkout-view";
@@ -12,7 +12,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
   const table = await getPublicTable(id);
 
   if (!table) {
-    return <TableNotFound />;
+    notFound();
   }
 
   return <CheckoutView tableId={table.id} tableNumber={table.number} />;
