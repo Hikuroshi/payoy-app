@@ -2,21 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 
 import { requireOrderStaffProfile } from "@/lib/auth/profile";
+import type { OrderStatus } from "@/lib/order";
 import { createClient } from "@/lib/server";
 
-import { orderStatuses } from "./data";
+import { updateOrderStatusSchema } from "./schema";
 
 const ordersPath = "/dashboard/orders";
 const historyPath = "/dashboard/orders/history";
-
-const updateOrderStatusSchema = z.object({
-  id: z.uuid("Pesanan tidak valid."),
-  redirectTo: z.string().default(ordersPath),
-  status: z.enum(orderStatuses),
-});
 
 function getFormString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -27,16 +21,12 @@ function getSafeDashboardPath(path: string) {
   return path.startsWith(ordersPath) ? path : ordersPath;
 }
 
-function redirectWith(
-  type: "success" | "error",
-  message: string,
-  path = ordersPath
-): never {
+function redirectWith(type: "success" | "error", message: string, path = ordersPath): never {
   const searchParams = new URLSearchParams({ [type]: message });
   redirect(`${path}?${searchParams.toString()}`);
 }
 
-function getStatusMessage(status: (typeof orderStatuses)[number]) {
+function getStatusMessage(status: OrderStatus) {
   if (status === "processing") {
     return "Pesanan diproses.";
   }
@@ -69,10 +59,7 @@ export async function updateOrderStatus(formData: FormData) {
   let query = supabase
     .from("orders")
     .update({
-      completed_at:
-        parsed.data.status === "done" || parsed.data.status === "cancelled"
-          ? now
-          : null,
+      completed_at: parsed.data.status === "done" || parsed.data.status === "cancelled" ? now : null,
       status: parsed.data.status,
       updated_at: now,
     })

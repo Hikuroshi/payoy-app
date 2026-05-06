@@ -1,16 +1,13 @@
 import "server-only";
 
 import type { CurrentUserProfile } from "@/lib/auth/profile";
+import {
+  activeOrderStatuses,
+  historyOrderStatuses,
+  type OrderStatus,
+} from "@/lib/order";
+import { matchesSearch, normalizeSearchQuery } from "@/lib/search";
 import { createClient } from "@/lib/server";
-
-export const activeOrderStatuses = ["waiting_payment", "paid", "processing"] as const;
-export const historyOrderStatuses = ["done", "cancelled"] as const;
-export const orderStatuses = [
-  ...activeOrderStatuses,
-  ...historyOrderStatuses,
-] as const;
-
-export type OrderStatus = (typeof orderStatuses)[number];
 
 export type DashboardOrderItem = {
   id: string;
@@ -35,6 +32,8 @@ export type DashboardOrder = {
   createdAt: string;
   items: DashboardOrderItem[];
 };
+
+export type { OrderStatus };
 
 type OrderItemRow = {
   id: string;
@@ -86,11 +85,12 @@ function mapOrder(order: OrderRow): DashboardOrder {
 
 export async function getDashboardOrders(
   profile: CurrentUserProfile,
-  mode: "active" | "history"
+  mode: "active" | "history",
+  query?: string
 ): Promise<{ error?: string; orders: DashboardOrder[] }> {
   const supabase = await createClient();
   const statuses = mode === "active" ? activeOrderStatuses : historyOrderStatuses;
-  let query = supabase
+  let request = supabase
     .from("orders")
     .select(
       "id, code, table_number, payment_method, status, subtotal, admin_fee, tax, total, paid_at, completed_at, created_at, order_items(id, food_name, note, price, quantity)"
@@ -99,7 +99,7 @@ export async function getDashboardOrders(
     .order("created_at", { ascending: false });
 
   if (profile.role === "owner") {
-    query = query.eq("owner_id", profile.id);
+    request = request.eq("owner_id", profile.id);
   }
 
   if (profile.role === "cashier") {
@@ -107,16 +107,30 @@ export async function getDashboardOrders(
       return { orders: [] };
     }
 
-    query = query.eq("owner_id", profile.ownerId);
+    request = request.eq("owner_id", profile.ownerId);
   }
 
-  const { data, error } = await query.returns<OrderRow[]>();
+  const { data, error } = await request.returns<OrderRow[]>();
 
   if (error) {
     return { error: "Pesanan gagal dimuat.", orders: [] };
   }
 
-  return { orders: (data ?? []).map(mapOrder) };
+  const normalizedQuery = normalizeSearchQuery(query);
+  const orders = (data ?? [])
+    .map(mapOrder)
+    .filter((order) =>
+      matchesSearch(
+        normalizedQuery,
+        order.code,
+        order.tableNumber,
+        order.paymentMethod,
+        order.status,
+        ...order.items.map((item) => item.foodName)
+      )
+    );
+
+  return { orders };
 }
 
 export async function getRecentOrders(

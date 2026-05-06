@@ -1,30 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
 import { createAdminClient, hasSupabaseAdminConfig } from "@/lib/admin";
+import {
+  createCustomerOrderSchema,
+  markCustomerOrderPaidSchema,
+} from "@/lib/customer-order-schema";
 import { createPublicClient } from "@/lib/public-server";
 
 import type { CustomerOrder, CustomerOrderStatus } from "./customer-cart";
-
-const paymentMethods = ["QRIS", "E-Wallet"] as const;
-
-const orderItemSchema = z.object({
-  id: z.uuid(),
-  note: z.string().max(200).optional(),
-  quantity: z.number().int().min(1).max(99),
-});
-
-const createOrderSchema = z.object({
-  items: z.array(orderItemSchema).min(1),
-  paymentMethod: z.enum(paymentMethods),
-  tableId: z.uuid(),
-});
-
-const markPaidSchema = z.object({
-  id: z.uuid(),
-});
 
 type TableRow = {
   id: string;
@@ -55,10 +40,8 @@ function getImageUrl(supabase: ReturnType<typeof createPublicClient>, path: stri
   return supabase.storage.from("menu_image").getPublicUrl(path).data.publicUrl;
 }
 
-export async function createCustomerOrder(
-  input: unknown
-): Promise<{ error: string; order?: never } | { error?: never; order: CustomerOrder }> {
-  const parsed = createOrderSchema.safeParse(input);
+export async function createCustomerOrder(input: unknown): Promise<{ error: string; order?: never } | { error?: never; order: CustomerOrder }> {
+  const parsed = createCustomerOrderSchema.safeParse(input);
 
   if (!parsed.success) {
     return { error: "Pesanan tidak valid." };
@@ -66,24 +49,14 @@ export async function createCustomerOrder(
 
   const supabase = createPublicClient();
   const { items, paymentMethod, tableId } = parsed.data;
-  const { data: table, error: tableError } = await supabase
-    .from("restaurant_tables")
-    .select("id, number, owner_id")
-    .eq("id", tableId)
-    .maybeSingle<TableRow>();
+  const { data: table, error: tableError } = await supabase.from("restaurant_tables").select("id, number, owner_id").eq("id", tableId).maybeSingle<TableRow>();
 
   if (tableError || !table) {
     return { error: "Meja tidak ditemukan." };
   }
 
   const foodIds = [...new Set(items.map((item) => item.id))];
-  const { data: foods, error: foodsError } = await supabase
-    .from("foods")
-    .select("id, name, description, image_path, price")
-    .eq("owner_id", table.owner_id)
-    .eq("is_available", true)
-    .in("id", foodIds)
-    .returns<FoodRow[]>();
+  const { data: foods, error: foodsError } = await supabase.from("foods").select("id, name, description, image_path, price").eq("owner_id", table.owner_id).eq("is_available", true).in("id", foodIds).returns<FoodRow[]>();
 
   if (foodsError) {
     return { error: "Menu gagal dimuat." };
@@ -114,10 +87,7 @@ export async function createCustomerOrder(
     return { error: "Makanan tidak tersedia." };
   }
 
-  const subtotal = orderItems.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
+  const subtotal = orderItems.reduce((total, item) => total + item.price * item.quantity, 0);
   const adminFee = 2000;
   const tax = Math.round(subtotal * 0.1);
   const total = subtotal + adminFee + tax;
@@ -156,7 +126,7 @@ export async function createCustomerOrder(
       order_id: orderId,
       price: item.price,
       quantity: item.quantity,
-    }))
+    })),
   );
 
   if (itemsError) {
@@ -196,7 +166,7 @@ export async function createCustomerOrder(
 }
 
 export async function markCustomerOrderPaid(input: unknown) {
-  const parsed = markPaidSchema.safeParse(input);
+  const parsed = markCustomerOrderPaidSchema.safeParse(input);
 
   if (!parsed.success) {
     return { error: "Pesanan tidak valid." };

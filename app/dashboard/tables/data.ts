@@ -1,5 +1,6 @@
 import "server-only";
 
+import { toSupabaseLikePattern } from "@/lib/search";
 import { createClient } from "@/lib/server";
 
 export type RestaurantTable = {
@@ -14,17 +15,25 @@ type RestaurantTableRow = {
   created_at: string;
 };
 
-export async function getOwnerTables(ownerId: string): Promise<{
+export async function getOwnerTables(
+  ownerId: string,
+  query?: string
+): Promise<{
   error?: string;
   tables: RestaurantTable[];
 }> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let request = supabase
     .from("restaurant_tables")
     .select("id, number, created_at")
     .eq("owner_id", ownerId)
-    .order("number", { ascending: true })
-    .returns<RestaurantTableRow[]>();
+    .order("number", { ascending: true });
+
+  if (query) {
+    request = request.ilike("number", toSupabaseLikePattern(query));
+  }
+
+  const { data, error } = await request.returns<RestaurantTableRow[]>();
 
   if (error) {
     return { tables: [], error: "Meja gagal dimuat." };

@@ -1,4 +1,7 @@
+import { Suspense } from "react";
+
 import { StatusToast } from "@/components/status-toast";
+import { UrlSearchInput } from "@/components/url-search-input";
 import {
   Card,
   CardContent,
@@ -6,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getParamValue, normalizeSearchQuery } from "@/lib/search";
 import { requireOrderStaffProfile } from "@/lib/auth/profile";
 
 import { getDashboardOrders } from "./data";
@@ -15,22 +19,16 @@ type OrdersPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-function getParamValue(
-  searchParams: Record<string, string | string[] | undefined>,
-  key: string
-) {
-  const value = searchParams[key];
-  return typeof value === "string" ? value : undefined;
-}
-
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const profile = await requireOrderStaffProfile();
   const resolvedSearchParams = await searchParams;
   const success = getParamValue(resolvedSearchParams, "success");
   const error = getParamValue(resolvedSearchParams, "error");
+  const query = normalizeSearchQuery(getParamValue(resolvedSearchParams, "query"));
   const { error: ordersError, orders } = await getDashboardOrders(
     profile,
-    "active"
+    "active",
+    query
   );
 
   return (
@@ -44,7 +42,10 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             diproses.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-4">
+          <Suspense fallback={null}>
+            <UrlSearchInput placeholder="Cari kode, meja, status, atau item..." />
+          </Suspense>
           <OrdersTable
             emptyMessage="Belum ada pesanan aktif."
             orders={orders}

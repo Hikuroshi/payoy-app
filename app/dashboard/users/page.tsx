@@ -1,69 +1,19 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
-import { Badge } from "@/components/ui/badge";
+import { UrlSearchInput } from "@/components/url-search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getParamValue, normalizeSearchQuery } from "@/lib/search";
 import { requireAdminProfile } from "@/lib/auth/profile";
 
-import { getDashboardUsers, type DashboardUser } from "./data";
-import { DeleteUserDialog } from "./delete-user-dialog";
-import { formatDate, getRoleBadgeVariant, roleLabels } from "./user-utils";
+import { getDashboardUsers } from "./data";
+import { UsersTable } from "./users-table";
 import { UsersToast } from "./users-toast";
 
 type UsersPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
-
-function getParamValue(searchParams: Record<string, string | string[] | undefined>, key: string) {
-  const value = searchParams[key];
-  return typeof value === "string" ? value : undefined;
-}
-
-function UsersTable({ users }: { users: DashboardUser[] }) {
-  if (!users.length) {
-    return <div className="rounded-lg border border-dashed p-6 text-center text-xs/relaxed text-muted-foreground">Belum ada user.</div>;
-  }
-
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="min-w-52">User</TableHead>
-          <TableHead className="min-w-48">Email</TableHead>
-          <TableHead className="min-w-32">Role</TableHead>
-          <TableHead className="min-w-36">Login terakhir</TableHead>
-          <TableHead className="w-40 text-right">Aksi</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {users.map((user) => (
-          <TableRow key={user.id}>
-            <TableCell>
-              <div className="flex min-w-48 flex-col gap-1">
-                <span className="font-medium">{user.name}</span>
-                <span className="text-[0.625rem] text-muted-foreground">Dibuat {formatDate(user.createdAt)}</span>
-              </div>
-            </TableCell>
-            <TableCell>{user.email}</TableCell>
-            <TableCell>
-              <Badge variant={getRoleBadgeVariant(user.role)}>{roleLabels[user.role]}</Badge>
-            </TableCell>
-            <TableCell className="text-muted-foreground">{formatDate(user.lastSignInAt)}</TableCell>
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                <Button asChild size="sm" variant="outline">
-                  <Link href={`/dashboard/users/form/${user.id}`}>Edit</Link>
-                </Button>
-                <DeleteUserDialog id={user.id} name={user.name} />
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-}
 
 export default async function UsersPage({ searchParams }: UsersPageProps) {
   await requireAdminProfile();
@@ -71,7 +21,8 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
   const resolvedSearchParams = await searchParams;
   const success = getParamValue(resolvedSearchParams, "success");
   const error = getParamValue(resolvedSearchParams, "error");
-  const { users, error: usersError } = await getDashboardUsers();
+  const query = normalizeSearchQuery(getParamValue(resolvedSearchParams, "query"));
+  const { users, error: usersError } = await getDashboardUsers(query);
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
@@ -89,6 +40,9 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           </CardAction>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
+          <Suspense fallback={null}>
+            <UrlSearchInput placeholder="Cari user, email, atau role..." />
+          </Suspense>
           <UsersTable users={users} />
         </CardContent>
       </Card>

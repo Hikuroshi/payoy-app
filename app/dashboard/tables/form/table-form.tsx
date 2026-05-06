@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useActionState } from "react";
 
 import { PendingButton } from "@/components/pending-button";
 import { Button } from "@/components/ui/button";
@@ -10,22 +13,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
 import type { RestaurantTable } from "../data";
+import { initialTableFormState, type TableFormState } from "../schema";
 
 type TableFormProps = {
-  action: (formData: FormData) => void | Promise<void>;
+  action: (state: TableFormState, formData: FormData) => Promise<TableFormState>;
   mode: "create" | "edit";
   table?: RestaurantTable;
 };
 
 export function TableForm({ action, mode, table }: TableFormProps) {
   const isEdit = mode === "edit";
+  const [state, formAction] = useActionState(action, initialTableFormState);
+  const numberError = state.errors?.number?.[0];
+  const defaultNumber = state.values?.number ?? table?.number ?? "";
 
   return (
-    <Card className="mx-auto w-full max-w-2xl">
+    <Card className="mx-auto w-full max-w-2xl" key={state.submissionId ?? `${mode}-${table?.id ?? "new"}`}>
       <CardHeader>
         <CardTitle>{isEdit ? "Edit Meja" : "Tambah Meja"}</CardTitle>
         <CardDescription>
@@ -34,31 +41,29 @@ export function TableForm({ action, mode, table }: TableFormProps) {
             : "Nomor meja dibuat unik untuk owner yang sedang login."}
         </CardDescription>
       </CardHeader>
-      <form action={action}>
+      <form action={formAction}>
         <CardContent>
           <FieldGroup>
-            <input
-              name="redirectTo"
-              type="hidden"
-              value={
-                isEdit && table
-                  ? `/dashboard/tables/form/${table.id}`
-                  : "/dashboard/tables/form"
-              }
-            />
             {isEdit && table ? (
               <input name="id" type="hidden" value={table.id} />
             ) : null}
-            <Field>
+            <Field data-invalid={!!numberError}>
               <FieldLabel htmlFor="number">Nomor meja</FieldLabel>
               <Input
-                defaultValue={table?.number}
+                aria-invalid={!!numberError}
+                defaultValue={defaultNumber}
                 id="number"
                 name="number"
                 placeholder="01"
                 required
               />
+              <FieldError>{numberError}</FieldError>
             </Field>
+            {state.message ? (
+              <FieldDescription className="text-destructive" aria-live="polite">
+                {state.message}
+              </FieldDescription>
+            ) : null}
           </FieldGroup>
         </CardContent>
         <CardFooter className="justify-between gap-2 pt-5">

@@ -1,3 +1,5 @@
+import type { OrderStatus, PaymentMethod } from "@/lib/order";
+
 export type CustomerCartFood = {
   id: string;
   name: string;
@@ -11,12 +13,7 @@ export type CustomerCartItem = CustomerCartFood & {
   quantity: number;
 };
 
-export type CustomerOrderStatus =
-  | "waiting_payment"
-  | "paid"
-  | "processing"
-  | "done"
-  | "cancelled";
+export type CustomerOrderStatus = OrderStatus;
 
 export type CustomerOrder = {
   id: string;
@@ -27,7 +24,7 @@ export type CustomerOrder = {
   completedAt?: string;
   items: CustomerCartItem[];
   paidAt?: string;
-  paymentMethod: string;
+  paymentMethod: PaymentMethod;
   status: CustomerOrderStatus;
   subtotal: number;
   tableId: string;
@@ -297,7 +294,7 @@ export function getLatestOrder(tableId: string): CustomerOrder | null {
 export function createOrderSnapshot(
   tableId: string,
   tableNumber: string,
-  paymentMethod: string
+  paymentMethod: PaymentMethod
 ) {
   const items = getCartItems(tableId);
 

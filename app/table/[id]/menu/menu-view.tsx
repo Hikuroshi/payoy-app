@@ -5,6 +5,7 @@ import Image from "next/image";
 import * as React from "react";
 import { toast } from "sonner";
 
+import { UrlSearchInput } from "@/components/url-search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +15,7 @@ import {
   formatPrice,
   getCartTotals,
   getTotalQuantity,
+  type CustomerCartItem,
 } from "../_components/customer-cart";
 import { useCartItems } from "../_components/customer-store-hooks";
 
@@ -24,6 +26,32 @@ export type PublicMenuFood = {
   imageUrl: string;
   price: number;
 };
+
+type CartOptimisticAction = {
+  item: PublicMenuFood;
+  type: "add";
+};
+
+function reduceCartItems(
+  currentItems: CustomerCartItem[],
+  action: CartOptimisticAction
+) {
+  if (action.type !== "add") {
+    return currentItems;
+  }
+
+  const currentItem = currentItems.find((item) => item.id === action.item.id);
+
+  if (currentItem) {
+    return currentItems.map((item) =>
+      item.id === action.item.id
+        ? { ...item, quantity: item.quantity + 1 }
+        : item
+    );
+  }
+
+  return [...currentItems, { ...action.item, note: "", quantity: 1 }];
+}
 
 function getInitials(value: string) {
   return value
@@ -121,19 +149,28 @@ function CheckoutBar({
 export function MenuView({
   errorMessage,
   foods,
+  query,
   tableId,
   tableNumber,
 }: {
   errorMessage?: string;
   foods: PublicMenuFood[];
+  query?: string;
   tableId: string;
   tableNumber: string;
 }) {
   const cartItems = useCartItems(tableId);
-  const cartTotals = getCartTotals(cartItems);
-  const cartCount = getTotalQuantity(cartItems);
+  const [optimisticCartItems, applyOptimisticCart] = React.useOptimistic(
+    cartItems,
+    reduceCartItems
+  );
+  const cartTotals = getCartTotals(optimisticCartItems);
+  const cartCount = getTotalQuantity(optimisticCartItems);
 
   function handleAddItem(item: PublicMenuFood) {
+    React.startTransition(() => {
+      applyOptimisticCart({ item, type: "add" });
+    });
     addCartItem(tableId, item);
     toast.success(`${item.name} ditambahkan ke keranjang`, { position: "top-center", duration: 1800 });
   }
@@ -157,6 +194,9 @@ export function MenuView({
           </div>
 
           <div className="mt-3.5">
+            <React.Suspense fallback={null}>
+              <UrlSearchInput className="mb-3.5" placeholder="Cari menu makanan..." />
+            </React.Suspense>
             {foods.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                 {foods.map((item) => (
@@ -164,7 +204,14 @@ export function MenuView({
                 ))}
               </div>
             ) : (
-              <MenuEmptyState message={errorMessage ?? "Menu belum tersedia untuk meja ini."} />
+              <MenuEmptyState
+                message={
+                  errorMessage ??
+                  (query
+                    ? `Tidak ada menu yang cocok dengan "${query}".`
+                    : "Menu belum tersedia untuk meja ini.")
+                }
+              />
             )}
           </div>
         </section>

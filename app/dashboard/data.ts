@@ -2,12 +2,15 @@ import "server-only";
 
 import { createAdminClient, hasSupabaseAdminConfig } from "@/lib/admin";
 import type { CurrentUserProfile } from "@/lib/auth/profile";
+import {
+  activeOrderStatuses,
+  historyOrderStatuses,
+  revenueOrderStatuses,
+} from "@/lib/order";
 import { createClient } from "@/lib/server";
 
 import {
-  activeOrderStatuses,
   getRecentOrders,
-  historyOrderStatuses,
   type DashboardOrder,
   type OrderStatus,
 } from "./orders/data";
@@ -66,7 +69,7 @@ async function getRevenue(profile: CurrentUserProfile) {
   let query = supabase
     .from("orders")
     .select("total")
-    .in("status", ["paid", "processing", "done"]);
+    .in("status", [...revenueOrderStatuses]);
 
   if (profile.role === "owner") {
     query = query.eq("owner_id", profile.id);

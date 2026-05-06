@@ -1,22 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { z } from "zod";
 
 import { createAdminClient, hasSupabaseAdminConfig } from "@/lib/admin";
+import { customerOrderStatusRequestSchema } from "@/lib/customer-order-schema";
+import { isOrderStatus } from "@/lib/order";
 
 export const dynamic = "force-dynamic";
-
-const orderStatuses = [
-  "waiting_payment",
-  "paid",
-  "processing",
-  "done",
-  "cancelled",
-] as const;
-
-const requestSchema = z.object({
-  id: z.uuid(),
-  tableId: z.uuid(),
-});
 
 type OrderStatusRow = {
   id: string;
@@ -25,10 +13,6 @@ type OrderStatusRow = {
   completed_at: string | null;
   updated_at: string;
 };
-
-function isOrderStatus(value: string): value is (typeof orderStatuses)[number] {
-  return orderStatuses.includes(value as (typeof orderStatuses)[number]);
-}
 
 function jsonResponse(body: unknown, status = 200) {
   return NextResponse.json(body, {
@@ -44,7 +28,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const parsed = requestSchema.safeParse({
+  const parsed = customerOrderStatusRequestSchema.safeParse({
     id,
     tableId: request.nextUrl.searchParams.get("tableId"),
   });

@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useActionState } from "react";
 
 import { PendingButton } from "@/components/pending-button";
 import { Button } from "@/components/ui/button";
@@ -16,6 +19,7 @@ import {
   Field,
   FieldContent,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
@@ -23,18 +27,28 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 import type { Food } from "../data";
+import { initialFoodFormState, type FoodFormState } from "../schema";
 
 type FoodFormProps = {
-  action: (formData: FormData) => void | Promise<void>;
+  action: (state: FoodFormState, formData: FormData) => Promise<FoodFormState>;
   food?: Food;
   mode: "create" | "edit";
 };
 
 export function FoodForm({ action, food, mode }: FoodFormProps) {
   const isEdit = mode === "edit";
+  const [state, formAction] = useActionState(action, initialFoodFormState);
+  const nameError = state.errors?.name?.[0];
+  const priceError = state.errors?.price?.[0];
+  const descriptionError = state.errors?.description?.[0];
+  const imageError = state.errors?.image?.[0];
+  const defaultName = state.values?.name ?? food?.name ?? "";
+  const defaultPrice = state.values?.price ?? String(food?.price ?? "");
+  const defaultDescription = state.values?.description ?? food?.description ?? "";
+  const defaultAvailability = state.values?.is_available ?? food?.isAvailable ?? true;
 
   return (
-    <Card className="mx-auto w-full max-w-2xl">
+    <Card className="mx-auto w-full max-w-2xl" key={state.submissionId ?? `${mode}-${food?.id ?? "new"}`}>
       <CardHeader>
         <CardTitle>{isEdit ? "Edit Makanan" : "Tambah Makanan"}</CardTitle>
         <CardDescription>
@@ -43,29 +57,22 @@ export function FoodForm({ action, food, mode }: FoodFormProps) {
             : "Makanan akan tampil di menu meja milik owner ini."}
         </CardDescription>
       </CardHeader>
-      <form action={action}>
+      <form action={formAction}>
         <CardContent>
           <FieldGroup>
-            <input
-              name="redirectTo"
-              type="hidden"
-              value={
-                isEdit && food
-                  ? `/dashboard/foods/form/${food.id}`
-                  : "/dashboard/foods/form"
-              }
-            />
             {isEdit && food ? (
               <input name="id" type="hidden" value={food.id} />
             ) : null}
-            <Field>
+            <Field data-invalid={!!nameError}>
               <FieldLabel htmlFor="name">Nama</FieldLabel>
-              <Input defaultValue={food?.name} id="name" name="name" required />
+              <Input aria-invalid={!!nameError} defaultValue={defaultName} id="name" name="name" required />
+              <FieldError>{nameError}</FieldError>
             </Field>
-            <Field>
+            <Field data-invalid={!!priceError}>
               <FieldLabel htmlFor="price">Harga</FieldLabel>
               <Input
-                defaultValue={food?.price}
+                aria-invalid={!!priceError}
+                defaultValue={defaultPrice}
                 id="price"
                 min={0}
                 name="price"
@@ -73,17 +80,20 @@ export function FoodForm({ action, food, mode }: FoodFormProps) {
                 step={500}
                 type="number"
               />
+              <FieldError>{priceError}</FieldError>
             </Field>
-            <Field>
+            <Field data-invalid={!!descriptionError}>
               <FieldLabel htmlFor="description">Deskripsi</FieldLabel>
               <Textarea
-                defaultValue={food?.description}
+                aria-invalid={!!descriptionError}
+                defaultValue={defaultDescription}
                 id="description"
                 name="description"
                 placeholder="Opsional"
               />
+              <FieldError>{descriptionError}</FieldError>
             </Field>
-            <Field>
+            <Field data-invalid={!!imageError}>
               <FieldLabel htmlFor="image">Gambar</FieldLabel>
               {food?.imageUrl ? (
                 <div className="relative aspect-video overflow-hidden rounded-md border bg-muted">
@@ -97,14 +107,15 @@ export function FoodForm({ action, food, mode }: FoodFormProps) {
                   />
                 </div>
               ) : null}
-              <Input accept="image/*" id="image" name="image" type="file" />
+              <Input accept="image/*" aria-invalid={!!imageError} id="image" name="image" type="file" />
               <FieldDescription>
                 Opsional. Gunakan gambar maksimal 1 MB.
               </FieldDescription>
+              <FieldError>{imageError}</FieldError>
             </Field>
             <Field orientation="horizontal">
               <Checkbox
-                defaultChecked={food?.isAvailable ?? true}
+                defaultChecked={defaultAvailability}
                 id="is_available"
                 name="is_available"
               />
@@ -115,6 +126,11 @@ export function FoodForm({ action, food, mode }: FoodFormProps) {
                 </FieldDescription>
               </FieldContent>
             </Field>
+            {state.message ? (
+              <FieldDescription className="text-destructive" aria-live="polite">
+                {state.message}
+              </FieldDescription>
+            ) : null}
           </FieldGroup>
         </CardContent>
         <CardFooter className="justify-between gap-2 pt-5">

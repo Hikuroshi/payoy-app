@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient, hasSupabaseAdminConfig } from "@/lib/admin";
+import { matchesSearch, normalizeSearchQuery } from "@/lib/search";
 import { normalizeRole, type UserRole } from "@/lib/auth/types";
 
 export type DashboardUser = {
@@ -19,7 +20,7 @@ type PublicUser = {
   created_at: string | null;
 };
 
-export async function getDashboardUsers(): Promise<{
+export async function getDashboardUsers(query?: string): Promise<{
   users: DashboardUser[];
   error?: string;
 }> {
@@ -42,21 +43,29 @@ export async function getDashboardUsers(): Promise<{
   }
 
   const publicUserById = new Map((publicUsers ?? []).map((user) => [user.id, user]));
+  const normalizedQuery = normalizeSearchQuery(query);
 
   return {
-    users: authData.users.map((authUser) => {
-      const publicUser = publicUserById.get(authUser.id);
-      const metadataName = typeof authUser.user_metadata?.name === "string" ? authUser.user_metadata.name : undefined;
+    users: authData.users
+      .map((authUser) => {
+        const publicUser = publicUserById.get(authUser.id);
+        const metadataName =
+          typeof authUser.user_metadata?.name === "string"
+            ? authUser.user_metadata.name
+            : undefined;
 
-      return {
-        id: authUser.id,
-        name: publicUser?.name ?? metadataName ?? authUser.email ?? "Tanpa nama",
-        email: authUser.email ?? "",
-        role: normalizeRole(publicUser?.role),
-        createdAt: publicUser?.created_at ?? authUser.created_at,
-        lastSignInAt: authUser.last_sign_in_at ?? null,
-      };
-    }),
+        return {
+          id: authUser.id,
+          name: publicUser?.name ?? metadataName ?? authUser.email ?? "Tanpa nama",
+          email: authUser.email ?? "",
+          role: normalizeRole(publicUser?.role),
+          createdAt: publicUser?.created_at ?? authUser.created_at,
+          lastSignInAt: authUser.last_sign_in_at ?? null,
+        };
+      })
+      .filter((user) =>
+        matchesSearch(normalizedQuery, user.name, user.email, user.role)
+      ),
   };
 }
 

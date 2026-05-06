@@ -1,35 +1,19 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { z } from "zod";
 
+import { createSubmissionId } from "@/lib/action-form";
 import { createClient } from "@/lib/server";
-import type { AuthFormState } from "@/lib/auth/types";
-
-const loginSchema = z.object({
-  email: z.string().trim().email("Masukkan email yang valid."),
-  password: z.string().min(1, "Password wajib diisi."),
-});
-
-const registerSchema = z
-  .object({
-    name: z.string().trim().min(2, "Nama minimal 2 karakter."),
-    email: z.string().trim().email("Masukkan email yang valid."),
-    password: z.string().min(8, "Password minimal 8 karakter."),
-    confirmPassword: z.string().min(1, "Konfirmasi password wajib diisi."),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    path: ["confirmPassword"],
-    message: "Konfirmasi password tidak sama.",
-  });
+import {
+  initialAuthFormState,
+  loginSchema,
+  registerSchema,
+  type AuthFormState,
+} from "./schema";
 
 function getFormString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
-}
-
-function createSubmissionId() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 export async function login(_state: AuthFormState, formData: FormData): Promise<AuthFormState> {
@@ -106,8 +90,9 @@ export async function register(_state: AuthFormState, formData: FormData): Promi
   }
 
   return {
-    success: true,
+    ...initialAuthFormState,
     message: "Registrasi berhasil. Silakan cek email untuk konfirmasi akun sebelum login.",
+    success: true,
   };
 }
 

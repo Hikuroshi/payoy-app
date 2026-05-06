@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { isOrderStatus } from "@/lib/order";
 
 import {
   getCartItems,
@@ -23,14 +24,6 @@ function getServerOrderSnapshot() {
   return null;
 }
 
-const remoteOrderStatuses: CustomerOrderStatus[] = [
-  "waiting_payment",
-  "paid",
-  "processing",
-  "done",
-  "cancelled",
-];
-
 type RemoteOrderStatus = {
   completedAt: string | null;
   paidAt: string | null;
@@ -38,7 +31,7 @@ type RemoteOrderStatus = {
 };
 
 function isRemoteOrderStatus(value: unknown): value is CustomerOrderStatus {
-  return remoteOrderStatuses.includes(value as CustomerOrderStatus);
+  return isOrderStatus(value);
 }
 
 function hasOrderChanged(order: CustomerOrder, remote: RemoteOrderStatus) {

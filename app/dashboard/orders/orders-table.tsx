@@ -1,3 +1,7 @@
+"use client";
+
+import * as React from "react";
+
 import { PendingButton } from "@/components/pending-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -69,6 +73,7 @@ function OrderItems({ order }: { order: DashboardOrder }) {
 }
 
 function OrderStatusForm({
+  action,
   children,
   order,
   pendingText,
@@ -76,6 +81,7 @@ function OrderStatusForm({
   status,
   variant = "outline",
 }: {
+  action?: (formData: FormData) => void | Promise<void>;
   children: React.ReactNode;
   order: DashboardOrder;
   pendingText: string;
@@ -84,7 +90,7 @@ function OrderStatusForm({
   variant?: React.ComponentProps<typeof Button>["variant"];
 }) {
   return (
-    <form action={updateOrderStatus}>
+    <form action={action ?? updateOrderStatus}>
       <input name="id" type="hidden" value={order.id} />
       <input name="status" type="hidden" value={status} />
       <input name="redirectTo" type="hidden" value={redirectTo} />
@@ -96,15 +102,18 @@ function OrderStatusForm({
 }
 
 function OrderActions({
+  onUpdate,
   order,
   redirectTo,
 }: {
+  onUpdate: (formData: FormData) => void | Promise<void>;
   order: DashboardOrder;
   redirectTo: string;
 }) {
   if (order.status === "waiting_payment") {
     return (
       <OrderStatusForm
+        action={onUpdate}
         order={order}
         pendingText="Membatalkan..."
         redirectTo={redirectTo}
@@ -120,6 +129,7 @@ function OrderActions({
     return (
       <div className="flex justify-end gap-2">
         <OrderStatusForm
+          action={onUpdate}
           order={order}
           pendingText="Memproses..."
           redirectTo={redirectTo}
@@ -128,6 +138,7 @@ function OrderActions({
           Proses
         </OrderStatusForm>
         <OrderStatusForm
+          action={onUpdate}
           order={order}
           pendingText="Membatalkan..."
           redirectTo={redirectTo}
@@ -144,6 +155,7 @@ function OrderActions({
     return (
       <div className="flex justify-end gap-2">
         <OrderStatusForm
+          action={onUpdate}
           order={order}
           pendingText="Menyelesaikan..."
           redirectTo={redirectTo}
@@ -152,6 +164,7 @@ function OrderActions({
           Selesai
         </OrderStatusForm>
         <OrderStatusForm
+          action={onUpdate}
           order={order}
           pendingText="Membatalkan..."
           redirectTo={redirectTo}
@@ -165,6 +178,91 @@ function OrderActions({
   }
 
   return null;
+}
+
+type OptimisticOrderUpdate = {
+  completedAt: string | null;
+  status: OrderStatus;
+};
+
+function OrderRow({
+  order,
+  redirectTo,
+  showActions,
+}: {
+  order: DashboardOrder;
+  redirectTo: string;
+  showActions: boolean;
+}) {
+  const [optimisticOrder, applyOptimisticUpdate] = React.useOptimistic(
+    order,
+    (
+      currentOrder: DashboardOrder,
+      optimisticUpdate: OptimisticOrderUpdate
+    ): DashboardOrder => ({
+      ...currentOrder,
+      completedAt: optimisticUpdate.completedAt,
+      status: optimisticUpdate.status,
+    })
+  );
+
+  async function optimisticUpdateStatus(formData: FormData) {
+    const nextStatus = formData.get("status");
+
+    if (typeof nextStatus === "string") {
+      const status = nextStatus as OrderStatus;
+      React.startTransition(() => {
+        applyOptimisticUpdate({
+          completedAt:
+            status === "done" || status === "cancelled"
+              ? new Date().toISOString()
+              : null,
+          status,
+        });
+      });
+    }
+
+    await updateOrderStatus(formData);
+  }
+
+  const shouldHide =
+    redirectTo === "/dashboard/orders" &&
+    (optimisticOrder.status === "done" || optimisticOrder.status === "cancelled");
+
+  if (shouldHide) {
+    return null;
+  }
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">{optimisticOrder.code}</TableCell>
+      <TableCell>Meja {optimisticOrder.tableNumber}</TableCell>
+      <TableCell>
+        <OrderItems order={optimisticOrder} />
+      </TableCell>
+      <TableCell>{optimisticOrder.paymentMethod}</TableCell>
+      <TableCell>{formatCurrency(optimisticOrder.total)}</TableCell>
+      <TableCell className="text-muted-foreground">
+        {formatOrderDate(optimisticOrder.createdAt)}
+      </TableCell>
+      <TableCell>
+        <Badge variant={getStatusVariant(optimisticOrder.status)}>
+          {orderStatusLabels[optimisticOrder.status]}
+        </Badge>
+      </TableCell>
+      {showActions ? (
+        <TableCell>
+          <div className="flex justify-end">
+            <OrderActions
+              onUpdate={optimisticUpdateStatus}
+              order={optimisticOrder}
+              redirectTo={redirectTo}
+            />
+          </div>
+        </TableCell>
+      ) : null}
+    </TableRow>
+  );
 }
 
 export function OrdersTable({
@@ -204,30 +302,12 @@ export function OrdersTable({
       </TableHeader>
       <TableBody>
         {orders.map((order) => (
-          <TableRow key={order.id}>
-            <TableCell className="font-medium">{order.code}</TableCell>
-            <TableCell>Meja {order.tableNumber}</TableCell>
-            <TableCell>
-              <OrderItems order={order} />
-            </TableCell>
-            <TableCell>{order.paymentMethod}</TableCell>
-            <TableCell>{formatCurrency(order.total)}</TableCell>
-            <TableCell className="text-muted-foreground">
-              {formatOrderDate(order.createdAt)}
-            </TableCell>
-            <TableCell>
-              <Badge variant={getStatusVariant(order.status)}>
-                {orderStatusLabels[order.status]}
-              </Badge>
-            </TableCell>
-            {showActions ? (
-              <TableCell>
-                <div className="flex justify-end">
-                  <OrderActions order={order} redirectTo={redirectTo} />
-                </div>
-              </TableCell>
-            ) : null}
-          </TableRow>
+          <OrderRow
+            key={order.id}
+            order={order}
+            redirectTo={redirectTo}
+            showActions={showActions}
+          />
         ))}
       </TableBody>
     </Table>

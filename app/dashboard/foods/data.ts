@@ -1,5 +1,6 @@
 import "server-only";
 
+import { toSupabaseLikePattern } from "@/lib/search";
 import { createClient } from "@/lib/server";
 
 const menuImageBucket = "menu_image";
@@ -37,17 +38,25 @@ function getPublicImageUrl(
     .publicUrl;
 }
 
-export async function getOwnerFoods(ownerId: string): Promise<{
+export async function getOwnerFoods(
+  ownerId: string,
+  query?: string
+): Promise<{
   error?: string;
   foods: Food[];
 }> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let request = supabase
     .from("foods")
     .select("id, name, description, image_path, price, is_available, created_at")
     .eq("owner_id", ownerId)
-    .order("name", { ascending: true })
-    .returns<FoodRow[]>();
+    .order("name", { ascending: true });
+
+  if (query) {
+    request = request.ilike("name", toSupabaseLikePattern(query));
+  }
+
+  const { data, error } = await request.returns<FoodRow[]>();
 
   if (error) {
     return { foods: [], error: "Makanan gagal dimuat." };

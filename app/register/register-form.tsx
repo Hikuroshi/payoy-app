@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { initialAuthFormState } from "@/lib/auth/types";
+import { initialAuthFormState } from "@/app/auth/schema";
 import { cn } from "@/lib/utils";
 
 export function RegisterForm({ className, ...props }: React.ComponentProps<"form">) {

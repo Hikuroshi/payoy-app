@@ -18,6 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { deleteDashboardUser } from "./actions";
 
 type DeleteUserDialogProps = {
+  action?: (formData: FormData) => void | Promise<void>;
   id: string;
   name: string;
 };
@@ -39,7 +40,11 @@ function DeleteSubmitButton() {
   );
 }
 
-export function DeleteUserDialog({ id, name }: DeleteUserDialogProps) {
+export function DeleteUserDialog({
+  action = deleteDashboardUser,
+  id,
+  name,
+}: DeleteUserDialogProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -56,7 +61,7 @@ export function DeleteUserDialog({ id, name }: DeleteUserDialogProps) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Batal</AlertDialogCancel>
-          <form action={deleteDashboardUser} className="contents">
+          <form action={action} className="contents">
             <input name="id" type="hidden" value={id} />
             <DeleteSubmitButton />
           </form>

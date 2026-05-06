@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useActionState } from "react";
 
 import { PendingButton } from "@/components/pending-button";
 import { Button } from "@/components/ui/button";
@@ -13,24 +16,35 @@ import {
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
 import type { DashboardCashier } from "../data";
+import { initialCashierFormState, type CashierFormState } from "../schema";
 
 type CashierFormProps = {
-  action: (formData: FormData) => void | Promise<void>;
+  action: (
+    state: CashierFormState,
+    formData: FormData
+  ) => Promise<CashierFormState>;
   cashier?: DashboardCashier;
   mode: "create" | "edit";
 };
 
 export function CashierForm({ action, cashier, mode }: CashierFormProps) {
   const isEdit = mode === "edit";
+  const [state, formAction] = useActionState(action, initialCashierFormState);
+  const nameError = state.errors?.name?.[0];
+  const emailError = state.errors?.email?.[0];
+  const passwordError = state.errors?.password?.[0];
+  const defaultName = state.values?.name ?? cashier?.name ?? "";
+  const defaultEmail = state.values?.email ?? cashier?.email ?? "";
 
   return (
-    <Card className="mx-auto w-full max-w-2xl">
+    <Card className="mx-auto w-full max-w-2xl" key={state.submissionId ?? `${mode}-${cashier?.id ?? "new"}`}>
       <CardHeader>
         <CardTitle>{isEdit ? "Edit Cashier" : "Tambah Cashier"}</CardTitle>
         <CardDescription>
@@ -39,39 +53,34 @@ export function CashierForm({ action, cashier, mode }: CashierFormProps) {
             : "Cashier baru akan terhubung ke akun owner ini."}
         </CardDescription>
       </CardHeader>
-      <form action={action}>
+      <form action={formAction}>
         <CardContent>
           <FieldGroup>
-            <input
-              name="redirectTo"
-              type="hidden"
-              value={
-                isEdit && cashier
-                  ? `/dashboard/cashiers/form/${cashier.id}`
-                  : "/dashboard/cashiers/form"
-              }
-            />
             {isEdit && cashier ? (
               <input name="id" type="hidden" value={cashier.id} />
             ) : null}
-            <Field>
+            <Field data-invalid={!!nameError}>
               <FieldLabel htmlFor="name">Nama</FieldLabel>
-              <Input defaultValue={cashier?.name} id="name" name="name" required />
+              <Input aria-invalid={!!nameError} defaultValue={defaultName} id="name" name="name" required />
+              <FieldError>{nameError}</FieldError>
             </Field>
-            <Field>
+            <Field data-invalid={!!emailError}>
               <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input
+                aria-invalid={!!emailError}
                 autoComplete="email"
-                defaultValue={cashier?.email}
+                defaultValue={defaultEmail}
                 id="email"
                 name="email"
                 required
                 type="email"
               />
+              <FieldError>{emailError}</FieldError>
             </Field>
-            <Field>
+            <Field data-invalid={!!passwordError}>
               <FieldLabel htmlFor="password">Password</FieldLabel>
               <Input
+                aria-invalid={!!passwordError}
                 autoComplete="new-password"
                 id="password"
                 minLength={8}
@@ -83,7 +92,13 @@ export function CashierForm({ action, cashier, mode }: CashierFormProps) {
               <FieldDescription>
                 {isEdit ? "Isi hanya kalau ingin mengganti password." : "Minimal 8 karakter."}
               </FieldDescription>
+              <FieldError>{passwordError}</FieldError>
             </Field>
+            {state.message ? (
+              <FieldDescription className="text-destructive" aria-live="polite">
+                {state.message}
+              </FieldDescription>
+            ) : null}
           </FieldGroup>
         </CardContent>
         <CardFooter className="justify-between gap-2 pt-5">

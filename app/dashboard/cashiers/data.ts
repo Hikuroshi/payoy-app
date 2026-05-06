@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient, hasSupabaseAdminConfig } from "@/lib/admin";
+import { matchesSearch, normalizeSearchQuery } from "@/lib/search";
 
 export type DashboardCashier = {
   id: string;
@@ -16,7 +17,10 @@ type PublicCashier = {
   created_at: string | null;
 };
 
-export async function getOwnerCashiers(ownerId: string): Promise<{
+export async function getOwnerCashiers(
+  ownerId: string,
+  query?: string
+): Promise<{
   cashiers: DashboardCashier[];
   error?: string;
 }> {
@@ -42,23 +46,28 @@ export async function getOwnerCashiers(ownerId: string): Promise<{
   }
 
   const authUserById = new Map(authData.users.map((user) => [user.id, user]));
+  const normalizedQuery = normalizeSearchQuery(query);
 
   return {
-    cashiers: (publicCashiers ?? []).map((cashier) => {
-      const authUser = authUserById.get(cashier.id);
-      const metadataName =
-        typeof authUser?.user_metadata?.name === "string"
-          ? authUser.user_metadata.name
-          : undefined;
+    cashiers: (publicCashiers ?? [])
+      .map((cashier) => {
+        const authUser = authUserById.get(cashier.id);
+        const metadataName =
+          typeof authUser?.user_metadata?.name === "string"
+            ? authUser.user_metadata.name
+            : undefined;
 
-      return {
-        createdAt: cashier.created_at ?? authUser?.created_at ?? "",
-        email: authUser?.email ?? "",
-        id: cashier.id,
-        lastSignInAt: authUser?.last_sign_in_at ?? null,
-        name: cashier.name ?? metadataName ?? authUser?.email ?? "Tanpa nama",
-      };
-    }),
+        return {
+          createdAt: cashier.created_at ?? authUser?.created_at ?? "",
+          email: authUser?.email ?? "",
+          id: cashier.id,
+          lastSignInAt: authUser?.last_sign_in_at ?? null,
+          name: cashier.name ?? metadataName ?? authUser?.email ?? "Tanpa nama",
+        };
+      })
+      .filter((cashier) =>
+        matchesSearch(normalizedQuery, cashier.name, cashier.email, "cashier")
+      ),
   };
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import * as React from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,34 +17,95 @@ type CartViewProps = {
   tableNumber: string;
 };
 
+type CartOptimisticAction =
+  | { id: string; quantity: number; type: "set_quantity" }
+  | { id: string; note: string; type: "set_note" }
+  | { id: string; type: "remove" }
+  | { type: "clear" };
+
+function reduceCartItems(
+  currentItems: CustomerCartItem[],
+  action: CartOptimisticAction
+) {
+  if (action.type === "clear") {
+    return [];
+  }
+
+  if (action.type === "remove") {
+    return currentItems.filter((item) => item.id !== action.id);
+  }
+
+  if (action.type === "set_note") {
+    return currentItems.map((item) =>
+      item.id === action.id ? { ...item, note: action.note } : item
+    );
+  }
+
+  return currentItems
+    .map((item) =>
+      item.id === action.id
+        ? { ...item, quantity: Math.max(0, action.quantity) }
+        : item
+    )
+    .filter((item) => item.quantity > 0);
+}
+
 export function CartView({ tableId, tableNumber }: CartViewProps) {
   const items = useCartItems(tableId);
+  const [optimisticItems, applyOptimisticItems] = React.useOptimistic(
+    items,
+    reduceCartItems
+  );
 
   function syncItems(nextItems: CustomerCartItem[]) {
     setCartItems(tableId, nextItems);
   }
 
   function updateQuantity(id: string, quantity: number) {
-    const nextItems = items.map((item) => (item.id === id ? { ...item, quantity: Math.max(0, quantity) } : item)).filter((item) => item.quantity > 0);
+    const nextItems = reduceCartItems(optimisticItems, {
+      id,
+      quantity,
+      type: "set_quantity",
+    });
 
+    React.startTransition(() => {
+      applyOptimisticItems({ id, quantity, type: "set_quantity" });
+    });
     syncItems(nextItems);
   }
 
   function updateNote(id: string, note: string) {
-    syncItems(items.map((item) => (item.id === id ? { ...item, note } : item)));
+    const nextItems = reduceCartItems(optimisticItems, {
+      id,
+      note,
+      type: "set_note",
+    });
+
+    React.startTransition(() => {
+      applyOptimisticItems({ id, note, type: "set_note" });
+    });
+    syncItems(nextItems);
   }
 
   function removeItem(id: string) {
-    syncItems(items.filter((item) => item.id !== id));
+    const nextItems = reduceCartItems(optimisticItems, { id, type: "remove" });
+
+    React.startTransition(() => {
+      applyOptimisticItems({ id, type: "remove" });
+    });
+    syncItems(nextItems);
     toast.success("Item dihapus dari keranjang", { position: "top-center" });
   }
 
   function handleClearCart() {
+    React.startTransition(() => {
+      applyOptimisticItems({ type: "clear" });
+    });
     clearCart(tableId);
     toast.success("Keranjang dikosongkan", { position: "top-center" });
   }
 
-  if (!items.length) {
+  if (!optimisticItems.length) {
     return (
       <CustomerPageShell>
         <CustomerPageHeader backHref={`/table/${tableId}/menu`} description="Tambahkan makanan dari halaman menu terlebih dahulu." tableNumber={tableNumber} title="Keranjang" />
@@ -52,7 +114,7 @@ export function CartView({ tableId, tableNumber }: CartViewProps) {
     );
   }
 
-  const totals = getCartTotals(items);
+  const totals = getCartTotals(optimisticItems);
 
   return (
     <CustomerPageShell>
@@ -61,10 +123,10 @@ export function CartView({ tableId, tableNumber }: CartViewProps) {
       <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
         <Card>
           <CardHeader>
-            <CardTitle>{getTotalQuantity(items)} item pesanan</CardTitle>
+            <CardTitle>{getTotalQuantity(optimisticItems)} item pesanan</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            {items.map((item) => (
+            {optimisticItems.map((item) => (
               <div className="flex flex-col gap-3 rounded-md border p-3" key={item.id}>
                 <div className="flex gap-3">
                   <CustomerItemImage alt={item.name} src={item.imageUrl} />

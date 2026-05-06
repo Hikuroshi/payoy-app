@@ -18,6 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { deleteDashboardCashier } from "./actions";
 
 type DeleteCashierDialogProps = {
+  action?: (formData: FormData) => void | Promise<void>;
   id: string;
   name: string;
 };
@@ -39,7 +40,11 @@ function DeleteSubmitButton() {
   );
 }
 
-export function DeleteCashierDialog({ id, name }: DeleteCashierDialogProps) {
+export function DeleteCashierDialog({
+  action = deleteDashboardCashier,
+  id,
+  name,
+}: DeleteCashierDialogProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -56,7 +61,7 @@ export function DeleteCashierDialog({ id, name }: DeleteCashierDialogProps) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Batal</AlertDialogCancel>
-          <form action={deleteDashboardCashier} className="contents">
+          <form action={action} className="contents">
             <input name="id" type="hidden" value={id} />
             <DeleteSubmitButton />
           </form>

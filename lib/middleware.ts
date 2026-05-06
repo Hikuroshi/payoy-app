@@ -3,6 +3,22 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const authRoutes = ["/login", "/register"];
 
+function clearSupabaseAuthCookies(
+  request: NextRequest,
+  response: NextResponse
+) {
+  for (const cookie of request.cookies.getAll()) {
+    if (!cookie.name.startsWith("sb-")) {
+      continue;
+    }
+
+    request.cookies.delete(cookie.name);
+    response.cookies.delete(cookie.name);
+  }
+
+  return response;
+}
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request,
@@ -23,8 +39,15 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const { data } = await supabase.auth.getClaims();
-  const isAuthenticated = Boolean(data?.claims?.sub);
+  let isAuthenticated = false;
+
+  try {
+    const { data } = await supabase.auth.getClaims();
+    isAuthenticated = Boolean(data?.claims?.sub);
+  } catch {
+    response = clearSupabaseAuthCookies(request, response);
+  }
+
   const pathname = request.nextUrl.pathname;
   const isAuthRoute = authRoutes.some((route) => pathname === route);
   const isProtectedRoute = pathname.startsWith("/dashboard");

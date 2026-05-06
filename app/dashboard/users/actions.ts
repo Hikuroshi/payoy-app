@@ -2,90 +2,111 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 
+import { createSubmissionId } from "@/lib/action-form";
 import { createAdminClient, hasSupabaseAdminConfig } from "@/lib/admin";
 import { requireAdminProfile } from "@/lib/auth/profile";
-import { userRoles } from "@/lib/auth/types";
+import {
+  createUserSchema,
+  deleteUserSchema,
+  type UserFormState,
+  type UserFormValues,
+  updateUserSchema,
+} from "./schema";
 
 const dashboardUsersPath = "/dashboard/users";
-
-const createUserSchema = z.object({
-  name: z.string().trim().min(2, "Nama minimal 2 karakter."),
-  email: z.string().trim().email("Email tidak valid."),
-  password: z.string().min(8, "Password minimal 8 karakter."),
-  role: z.enum(userRoles),
-});
-
-const updateUserSchema = z.object({
-  id: z.uuid("User tidak valid."),
-  name: z.string().trim().min(2, "Nama minimal 2 karakter."),
-  email: z.string().trim().email("Email tidak valid."),
-  password: z
-    .string()
-    .refine((password) => password === "" || password.length >= 8, "Password minimal 8 karakter.")
-    .optional(),
-  role: z.enum(userRoles),
-});
-
-const deleteUserSchema = z.object({
-  id: z.uuid("User tidak valid."),
-});
-
-function getSafeDashboardPath(path: string) {
-  return path.startsWith("/dashboard/users") ? path : dashboardUsersPath;
-}
 
 function getFormString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
 }
 
-function getRedirectPath(formData: FormData) {
-  return getSafeDashboardPath(getFormString(formData, "redirectTo"));
-}
-
-function redirectWith(
-  type: "success" | "error",
-  message: string,
-  path = dashboardUsersPath
-): never {
+function redirectWith(type: "success" | "error", message: string, path = dashboardUsersPath): never {
   const searchParams = new URLSearchParams({ [type]: message });
   redirect(`${path}?${searchParams.toString()}`);
 }
 
+function createUserFormState(
+  values: Partial<UserFormValues>,
+  message?: string,
+  errors?: UserFormState["errors"]
+): UserFormState {
+  return {
+    errors,
+    message,
+    submissionId: createSubmissionId(),
+    values,
+  };
+}
+
+function getUserErrorState(values: Partial<UserFormValues>, message: string) {
+  return createUserFormState(values, message);
+}
+
+function getAdminClientOrState(values: Partial<UserFormValues>) {
+  if (!hasSupabaseAdminConfig()) {
+    return { state: getUserErrorState(values, "User gagal diproses.") };
+  }
+
+  return { client: createAdminClient() };
+}
+
 function getAdminClientOrRedirect(errorPath = dashboardUsersPath) {
   if (!hasSupabaseAdminConfig()) {
-    redirectWith(
-      "error",
-      "User gagal diproses.",
-      errorPath
-    );
+    redirectWith("error", "User gagal diproses.", errorPath);
   }
 
   return createAdminClient();
 }
 
-export async function createDashboardUser(formData: FormData) {
+function getEmailFieldError(message?: string) {
+  const normalizedMessage = message?.toLowerCase() ?? "";
+
+  if (
+    normalizedMessage.includes("already") ||
+    normalizedMessage.includes("exists") ||
+    normalizedMessage.includes("registered")
+  ) {
+    return ["Email sudah digunakan."];
+  }
+
+  return undefined;
+}
+
+export async function createDashboardUser(
+  _state: UserFormState,
+  formData: FormData
+): Promise<UserFormState> {
   await requireAdminProfile();
-  const errorPath = getRedirectPath(formData);
+
+  const values = {
+    email: getFormString(formData, "email"),
+    name: getFormString(formData, "name"),
+    role: getFormString(formData, "role") as UserFormValues["role"],
+  };
 
   const parsed = createUserSchema.safeParse({
-    name: getFormString(formData, "name"),
-    email: getFormString(formData, "email"),
+    name: values.name,
+    email: values.email,
     password: getFormString(formData, "password"),
-    role: getFormString(formData, "role"),
+    role: values.role,
   });
 
   if (!parsed.success) {
-    redirectWith(
-      "error",
-      parsed.error.issues[0]?.message ?? "Data user tidak valid.",
-      errorPath
+    return createUserFormState(
+      values,
+      "Periksa kembali data user.",
+      parsed.error.flatten().fieldErrors
     );
   }
 
-  const admin = getAdminClientOrRedirect(errorPath);
+  const adminResult = getAdminClientOrState(values);
+
+  if (adminResult.state) {
+    return adminResult.state;
+  }
+
+  const admin = adminResult.client;
   const { name, email, password, role } = parsed.data;
   const { data, error } = await admin.auth.admin.createUser({
     email,
@@ -95,7 +116,11 @@ export async function createDashboardUser(formData: FormData) {
   });
 
   if (error || !data.user) {
-    redirectWith("error", "User gagal dibuat.", errorPath);
+    return createUserFormState(
+      { email, name, role },
+      "User gagal dibuat.",
+      { email: getEmailFieldError(error?.message) }
+    );
   }
 
   const { error: userError } = await admin.from("users").upsert({
@@ -106,34 +131,48 @@ export async function createDashboardUser(formData: FormData) {
   });
 
   if (userError) {
-    redirectWith("error", "User gagal dibuat.", errorPath);
+    return getUserErrorState({ email, name, role }, "User gagal dibuat.");
   }
 
   revalidatePath(dashboardUsersPath);
   redirectWith("success", "User berhasil dibuat.");
 }
 
-export async function updateDashboardUser(formData: FormData) {
+export async function updateDashboardUser(
+  _state: UserFormState,
+  formData: FormData
+): Promise<UserFormState> {
   await requireAdminProfile();
-  const errorPath = getRedirectPath(formData);
+
+  const values = {
+    email: getFormString(formData, "email"),
+    name: getFormString(formData, "name"),
+    role: getFormString(formData, "role") as UserFormValues["role"],
+  };
 
   const parsed = updateUserSchema.safeParse({
     id: getFormString(formData, "id"),
-    name: getFormString(formData, "name"),
-    email: getFormString(formData, "email"),
+    name: values.name,
+    email: values.email,
     password: getFormString(formData, "password"),
-    role: getFormString(formData, "role"),
+    role: values.role,
   });
 
   if (!parsed.success) {
-    redirectWith(
-      "error",
-      parsed.error.issues[0]?.message ?? "Data user tidak valid.",
-      errorPath
+    return createUserFormState(
+      values,
+      "Periksa kembali data user.",
+      parsed.error.flatten().fieldErrors
     );
   }
 
-  const admin = getAdminClientOrRedirect(errorPath);
+  const adminResult = getAdminClientOrState(values);
+
+  if (adminResult.state) {
+    return adminResult.state;
+  }
+
+  const admin = adminResult.client;
   const { id, name, email, password, role } = parsed.data;
   const { error } = await admin.auth.admin.updateUserById(id, {
     email,
@@ -142,7 +181,11 @@ export async function updateDashboardUser(formData: FormData) {
   });
 
   if (error) {
-    redirectWith("error", "User gagal diperbarui.", errorPath);
+    return createUserFormState(
+      { email, name, role },
+      "User gagal diperbarui.",
+      { email: getEmailFieldError(error.message) }
+    );
   }
 
   const { error: userError } = await admin.from("users").upsert({
@@ -153,7 +196,10 @@ export async function updateDashboardUser(formData: FormData) {
   });
 
   if (userError) {
-    redirectWith("error", "User gagal diperbarui.", errorPath);
+    return getUserErrorState(
+      { email, name, role },
+      "User gagal diperbarui."
+    );
   }
 
   revalidatePath(dashboardUsersPath);

@@ -2,56 +2,65 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 
+import { createSubmissionId } from "@/lib/action-form";
 import { createAdminClient, hasSupabaseAdminConfig } from "@/lib/admin";
 import { requireOwnerProfile } from "@/lib/auth/profile";
+import {
+  createCashierSchema,
+  deleteCashierSchema,
+  type CashierFormState,
+  type CashierFormValues,
+  updateCashierSchema,
+} from "./schema";
 
 const dashboardCashiersPath = "/dashboard/cashiers";
-
-const createCashierSchema = z.object({
-  email: z.string().trim().email("Email tidak valid."),
-  name: z.string().trim().min(2, "Nama minimal 2 karakter."),
-  password: z.string().min(8, "Password minimal 8 karakter."),
-});
-
-const updateCashierSchema = z.object({
-  email: z.string().trim().email("Email tidak valid."),
-  id: z.uuid("Cashier tidak valid."),
-  name: z.string().trim().min(2, "Nama minimal 2 karakter."),
-  password: z
-    .string()
-    .refine(
-      (password) => password === "" || password.length >= 8,
-      "Password minimal 8 karakter."
-    )
-    .optional(),
-});
-
-const deleteCashierSchema = z.object({
-  id: z.uuid("Cashier tidak valid."),
-});
 
 function getFormString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
 }
 
-function getSafeDashboardPath(path: string) {
-  return path.startsWith(dashboardCashiersPath) ? path : dashboardCashiersPath;
-}
-
-function getRedirectPath(formData: FormData) {
-  return getSafeDashboardPath(getFormString(formData, "redirectTo"));
-}
-
-function redirectWith(
-  type: "success" | "error",
-  message: string,
-  path = dashboardCashiersPath
-): never {
+function redirectWith(type: "success" | "error", message: string, path = dashboardCashiersPath): never {
   const searchParams = new URLSearchParams({ [type]: message });
   redirect(`${path}?${searchParams.toString()}`);
+}
+
+function createCashierFormState(
+  values: Partial<CashierFormValues>,
+  message?: string,
+  errors?: CashierFormState["errors"]
+): CashierFormState {
+  return {
+    errors,
+    message,
+    submissionId: createSubmissionId(),
+    values,
+  };
+}
+
+function getEmailFieldError(message?: string) {
+  const normalizedMessage = message?.toLowerCase() ?? "";
+
+  if (
+    normalizedMessage.includes("already") ||
+    normalizedMessage.includes("exists") ||
+    normalizedMessage.includes("registered")
+  ) {
+    return ["Email sudah digunakan."];
+  }
+
+  return undefined;
+}
+
+function getAdminClientOrState(values: Partial<CashierFormValues>) {
+  if (!hasSupabaseAdminConfig()) {
+    return {
+      state: createCashierFormState(values, "Cashier gagal diproses."),
+    };
+  }
+
+  return { client: createAdminClient() };
 }
 
 function getAdminClientOrRedirect(errorPath = dashboardCashiersPath) {
@@ -62,43 +71,44 @@ function getAdminClientOrRedirect(errorPath = dashboardCashiersPath) {
   return createAdminClient();
 }
 
-async function ensureOwnerCashier(
-  admin: ReturnType<typeof createAdminClient>,
-  ownerId: string,
-  cashierId: string,
-  errorPath = dashboardCashiersPath
-) {
-  const { data, error } = await admin
-    .from("users")
-    .select("id")
-    .eq("id", cashierId)
-    .eq("role", "cashier")
-    .eq("owner_id", ownerId)
-    .maybeSingle<{ id: string }>();
+async function ensureOwnerCashier(admin: ReturnType<typeof createAdminClient>, ownerId: string, cashierId: string, errorPath = dashboardCashiersPath) {
+  const { data, error } = await admin.from("users").select("id").eq("id", cashierId).eq("role", "cashier").eq("owner_id", ownerId).maybeSingle<{ id: string }>();
 
   if (error || !data) {
     redirectWith("error", "Cashier tidak ditemukan.", errorPath);
   }
 }
 
-export async function createDashboardCashier(formData: FormData) {
+export async function createDashboardCashier(
+  _state: CashierFormState,
+  formData: FormData
+): Promise<CashierFormState> {
   const owner = await requireOwnerProfile();
-  const errorPath = getRedirectPath(formData);
-  const parsed = createCashierSchema.safeParse({
+  const values = {
     email: getFormString(formData, "email"),
     name: getFormString(formData, "name"),
+  };
+  const parsed = createCashierSchema.safeParse({
+    email: values.email,
+    name: values.name,
     password: getFormString(formData, "password"),
   });
 
   if (!parsed.success) {
-    redirectWith(
-      "error",
-      parsed.error.issues[0]?.message ?? "Data cashier tidak valid.",
-      errorPath
+    return createCashierFormState(
+      values,
+      "Periksa kembali data cashier.",
+      parsed.error.flatten().fieldErrors
     );
   }
 
-  const admin = getAdminClientOrRedirect(errorPath);
+  const adminResult = getAdminClientOrState(values);
+
+  if (adminResult.state) {
+    return adminResult.state;
+  }
+
+  const admin = adminResult.client;
   const { email, name, password } = parsed.data;
   const { data, error } = await admin.auth.admin.createUser({
     email,
@@ -108,7 +118,11 @@ export async function createDashboardCashier(formData: FormData) {
   });
 
   if (error || !data.user) {
-    redirectWith("error", "Cashier gagal dibuat.", errorPath);
+    return createCashierFormState(
+      { email, name },
+      "Cashier gagal dibuat.",
+      { email: getEmailFieldError(error?.message) }
+    );
   }
 
   const { error: cashierError } = await admin.from("users").upsert({
@@ -120,7 +134,7 @@ export async function createDashboardCashier(formData: FormData) {
   });
 
   if (cashierError) {
-    redirectWith("error", "Cashier gagal dibuat.", errorPath);
+    return createCashierFormState({ email, name }, "Cashier gagal dibuat.");
   }
 
   revalidatePath(dashboardCashiersPath);
@@ -128,28 +142,40 @@ export async function createDashboardCashier(formData: FormData) {
   redirectWith("success", "Cashier berhasil dibuat.");
 }
 
-export async function updateDashboardCashier(formData: FormData) {
+export async function updateDashboardCashier(
+  _state: CashierFormState,
+  formData: FormData
+): Promise<CashierFormState> {
   const owner = await requireOwnerProfile();
-  const errorPath = getRedirectPath(formData);
-  const parsed = updateCashierSchema.safeParse({
+  const values = {
     email: getFormString(formData, "email"),
-    id: getFormString(formData, "id"),
     name: getFormString(formData, "name"),
+  };
+  const parsed = updateCashierSchema.safeParse({
+    email: values.email,
+    id: getFormString(formData, "id"),
+    name: values.name,
     password: getFormString(formData, "password"),
   });
 
   if (!parsed.success) {
-    redirectWith(
-      "error",
-      parsed.error.issues[0]?.message ?? "Data cashier tidak valid.",
-      errorPath
+    return createCashierFormState(
+      values,
+      "Periksa kembali data cashier.",
+      parsed.error.flatten().fieldErrors
     );
   }
 
-  const admin = getAdminClientOrRedirect(errorPath);
+  const adminResult = getAdminClientOrState(values);
+
+  if (adminResult.state) {
+    return adminResult.state;
+  }
+
+  const admin = adminResult.client;
   const { email, id, name, password } = parsed.data;
 
-  await ensureOwnerCashier(admin, owner.id, id, errorPath);
+  await ensureOwnerCashier(admin, owner.id, id);
 
   const { error } = await admin.auth.admin.updateUserById(id, {
     email,
@@ -158,7 +184,11 @@ export async function updateDashboardCashier(formData: FormData) {
   });
 
   if (error) {
-    redirectWith("error", "Cashier gagal diperbarui.", errorPath);
+    return createCashierFormState(
+      { email, name },
+      "Cashier gagal diperbarui.",
+      { email: getEmailFieldError(error.message) }
+    );
   }
 
   const { error: cashierError } = await admin.from("users").upsert({
@@ -170,7 +200,10 @@ export async function updateDashboardCashier(formData: FormData) {
   });
 
   if (cashierError) {
-    redirectWith("error", "Cashier gagal diperbarui.", errorPath);
+    return createCashierFormState(
+      { email, name },
+      "Cashier gagal diperbarui."
+    );
   }
 
   revalidatePath(dashboardCashiersPath);
@@ -185,10 +218,7 @@ export async function deleteDashboardCashier(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirectWith(
-      "error",
-      parsed.error.issues[0]?.message ?? "Cashier tidak valid."
-    );
+    redirectWith("error", parsed.error.issues[0]?.message ?? "Cashier tidak valid.");
   }
 
   const admin = getAdminClientOrRedirect();

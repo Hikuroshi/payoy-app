@@ -4,29 +4,21 @@ import { randomUUID } from "node:crypto";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 
+import { createSubmissionId } from "@/lib/action-form";
 import { requireOwnerProfile } from "@/lib/auth/profile";
 import { createClient } from "@/lib/server";
+import {
+  deleteFoodSchema,
+  foodSchema,
+  type FoodFormState,
+  type FoodFormValues,
+  updateFoodSchema,
+} from "./schema";
 
 const foodsPath = "/dashboard/foods";
 const menuImageBucket = "menu_image";
 const maxImageSize = 1024 * 1024;
-
-const foodSchema = z.object({
-  name: z.string().trim().min(2, "Nama makanan minimal 2 karakter."),
-  description: z.string().trim().optional(),
-  price: z.coerce.number().min(0, "Harga tidak valid."),
-  isAvailable: z.boolean(),
-});
-
-const updateFoodSchema = foodSchema.extend({
-  id: z.uuid("Makanan tidak valid."),
-});
-
-const deleteFoodSchema = z.object({
-  id: z.uuid("Makanan tidak valid."),
-});
 
 function getFormString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -66,63 +58,78 @@ function getImageExtension(file: File) {
   return file.type.split("/")[1]?.split("+")[0] || "jpg";
 }
 
-async function uploadFoodImage(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  ownerId: string,
-  foodId: string,
-  file: File
-) {
+async function uploadFoodImage(supabase: Awaited<ReturnType<typeof createClient>>, ownerId: string, foodId: string, file: File) {
   const extension = getImageExtension(file);
   const path = `${ownerId}/${foodId}-${randomUUID()}.${extension}`;
-  const { error } = await supabase.storage
-    .from(menuImageBucket)
-    .upload(path, file, {
-      cacheControl: "3600",
-      contentType: file.type,
-      upsert: false,
-    });
+  const { error } = await supabase.storage.from(menuImageBucket).upload(path, file, {
+    cacheControl: "3600",
+    contentType: file.type,
+    upsert: false,
+  });
 
   return { error, path };
 }
 
-function getSafeDashboardPath(path: string) {
-  return path.startsWith(foodsPath) ? path : foodsPath;
-}
-
-function getRedirectPath(formData: FormData) {
-  return getSafeDashboardPath(getFormString(formData, "redirectTo"));
-}
-
-function redirectWith(
-  type: "success" | "error",
-  message: string,
-  path = foodsPath
-): never {
+function redirectWith(type: "success" | "error", message: string, path = foodsPath): never {
   const searchParams = new URLSearchParams({ [type]: message });
   redirect(`${path}?${searchParams.toString()}`);
 }
 
-export async function createFood(formData: FormData) {
+function createFoodFormState(
+  values: FoodFormValues,
+  message?: string,
+  errors?: FoodFormState["errors"]
+): FoodFormState {
+  return {
+    errors,
+    message,
+    submissionId: createSubmissionId(),
+    values,
+  };
+}
+
+function mapFoodFieldErrors(
+  errors: Record<string, string[] | undefined>
+): FoodFormState["errors"] {
+  return {
+    description: errors.description,
+    is_available: errors.isAvailable,
+    name: errors.name,
+    price: errors.price,
+  };
+}
+
+export async function createFood(
+  _state: FoodFormState,
+  formData: FormData
+): Promise<FoodFormState> {
   const owner = await requireOwnerProfile();
-  const errorPath = getRedirectPath(formData);
+  const values = {
+    description: getFormString(formData, "description"),
+    is_available: getFormBoolean(formData, "is_available"),
+    name: getFormString(formData, "name"),
+    price: getFormString(formData, "price"),
+  };
   const image = getImageFile(formData);
   const parsed = foodSchema.safeParse({
-    name: getFormString(formData, "name"),
-    description: getFormString(formData, "description"),
-    price: getFormString(formData, "price"),
-    isAvailable: getFormBoolean(formData, "is_available"),
+    name: values.name,
+    description: values.description,
+    price: values.price,
+    isAvailable: values.is_available,
   });
 
   if (!parsed.success) {
-    redirectWith(
-      "error",
-      parsed.error.issues[0]?.message ?? "Data makanan tidak valid.",
-      errorPath
+    return createFoodFormState(
+      values,
+      "Periksa kembali data makanan.",
+      mapFoodFieldErrors(parsed.error.flatten().fieldErrors)
     );
   }
 
   if (image.error) {
-    redirectWith("error", image.error, errorPath);
+    return createFoodFormState(values, "Periksa kembali data makanan.", {
+      image: [image.error],
+    });
   }
 
   const supabase = await createClient();
@@ -130,15 +137,12 @@ export async function createFood(formData: FormData) {
   let imagePath: string | null = null;
 
   if (image.file) {
-    const uploadedImage = await uploadFoodImage(
-      supabase,
-      owner.id,
-      foodId,
-      image.file
-    );
+    const uploadedImage = await uploadFoodImage(supabase, owner.id, foodId, image.file);
 
     if (uploadedImage.error) {
-      redirectWith("error", "Gambar makanan gagal diupload.", errorPath);
+      return createFoodFormState(values, "Gambar makanan gagal diupload.", {
+        image: ["Gambar makanan gagal diupload."],
+      });
     }
 
     imagePath = uploadedImage.path;
@@ -159,35 +163,45 @@ export async function createFood(formData: FormData) {
       await supabase.storage.from(menuImageBucket).remove([imagePath]);
     }
 
-    redirectWith("error", "Makanan gagal dibuat.", errorPath);
+    return createFoodFormState(values, "Makanan gagal dibuat.");
   }
 
   revalidatePath(foodsPath);
   redirectWith("success", "Makanan berhasil dibuat.");
 }
 
-export async function updateFood(formData: FormData) {
+export async function updateFood(
+  _state: FoodFormState,
+  formData: FormData
+): Promise<FoodFormState> {
   const owner = await requireOwnerProfile();
-  const errorPath = getRedirectPath(formData);
+  const values = {
+    description: getFormString(formData, "description"),
+    is_available: getFormBoolean(formData, "is_available"),
+    name: getFormString(formData, "name"),
+    price: getFormString(formData, "price"),
+  };
   const image = getImageFile(formData);
   const parsed = updateFoodSchema.safeParse({
     id: getFormString(formData, "id"),
-    name: getFormString(formData, "name"),
-    description: getFormString(formData, "description"),
-    price: getFormString(formData, "price"),
-    isAvailable: getFormBoolean(formData, "is_available"),
+    name: values.name,
+    description: values.description,
+    price: values.price,
+    isAvailable: values.is_available,
   });
 
   if (!parsed.success) {
-    redirectWith(
-      "error",
-      parsed.error.issues[0]?.message ?? "Data makanan tidak valid.",
-      errorPath
+    return createFoodFormState(
+      values,
+      "Periksa kembali data makanan.",
+      mapFoodFieldErrors(parsed.error.flatten().fieldErrors)
     );
   }
 
   if (image.error) {
-    redirectWith("error", image.error, errorPath);
+    return createFoodFormState(values, "Periksa kembali data makanan.", {
+      image: [image.error],
+    });
   }
 
   const supabase = await createClient();
@@ -195,24 +209,16 @@ export async function updateFood(formData: FormData) {
   let previousImagePath: string | null = null;
 
   if (image.file) {
-    const { data: currentFood } = await supabase
-      .from("foods")
-      .select("image_path")
-      .eq("id", parsed.data.id)
-      .eq("owner_id", owner.id)
-      .maybeSingle<{ image_path: string | null }>();
+    const { data: currentFood } = await supabase.from("foods").select("image_path").eq("id", parsed.data.id).eq("owner_id", owner.id).maybeSingle<{ image_path: string | null }>();
 
     previousImagePath = currentFood?.image_path ?? null;
 
-    const uploadedImage = await uploadFoodImage(
-      supabase,
-      owner.id,
-      parsed.data.id,
-      image.file
-    );
+    const uploadedImage = await uploadFoodImage(supabase, owner.id, parsed.data.id, image.file);
 
     if (uploadedImage.error) {
-      redirectWith("error", "Gambar makanan gagal diupload.", errorPath);
+      return createFoodFormState(values, "Gambar makanan gagal diupload.", {
+        image: ["Gambar makanan gagal diupload."],
+      });
     }
 
     imagePath = uploadedImage.path;
@@ -236,7 +242,7 @@ export async function updateFood(formData: FormData) {
       await supabase.storage.from(menuImageBucket).remove([imagePath]);
     }
 
-    redirectWith("error", "Makanan gagal diperbarui.", errorPath);
+    return createFoodFormState(values, "Makanan gagal diperbarui.");
   }
 
   if (imagePath && previousImagePath) {
@@ -259,18 +265,9 @@ export async function deleteFood(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { data: food } = await supabase
-    .from("foods")
-    .select("image_path")
-    .eq("id", parsed.data.id)
-    .eq("owner_id", owner.id)
-    .maybeSingle<{ image_path: string | null }>();
+  const { data: food } = await supabase.from("foods").select("image_path").eq("id", parsed.data.id).eq("owner_id", owner.id).maybeSingle<{ image_path: string | null }>();
 
-  const { error } = await supabase
-    .from("foods")
-    .delete()
-    .eq("id", parsed.data.id)
-    .eq("owner_id", owner.id);
+  const { error } = await supabase.from("foods").delete().eq("id", parsed.data.id).eq("owner_id", owner.id);
 
   if (error) {
     redirectWith("error", "Makanan gagal dihapus.");

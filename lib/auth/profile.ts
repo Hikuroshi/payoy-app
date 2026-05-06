@@ -15,10 +15,16 @@ export type CurrentUserProfile = {
 
 export async function getCurrentUserProfile(): Promise<CurrentUserProfile | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  let user = null;
+  let userError = null;
+
+  try {
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+    userError = result.error;
+  } catch {
+    return null;
+  }
 
   if (userError || !user) {
     return null;

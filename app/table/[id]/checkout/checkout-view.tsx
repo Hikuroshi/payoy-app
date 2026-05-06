@@ -11,6 +11,7 @@ import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, Dr
 import { FieldLegend, FieldSet } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
+import { paymentMethods, type PaymentMethod } from "@/lib/order";
 import { cn } from "@/lib/utils";
 
 import { getCartTotals, getTotalQuantity, saveOrder } from "../_components/customer-cart";
@@ -18,24 +19,18 @@ import { CustomerPageHeader, CustomerPageShell, EmptyCustomerState, OrderItemRow
 import { createCustomerOrder } from "../_components/order-actions";
 import { useCartItems } from "../_components/customer-store-hooks";
 
-type PaymentMethod = "QRIS" | "E-Wallet";
-
-const paymentMethods: {
+const paymentMethodOptions: {
   description: string;
   label: PaymentMethod;
   value: PaymentMethod;
-}[] = [
-  {
-    description: "Bayar dengan kode QRIS.",
-    label: "QRIS",
-    value: "QRIS",
-  },
-  {
-    description: "Bayar melalui dompet digital.",
-    label: "E-Wallet",
-    value: "E-Wallet",
-  },
-];
+}[] = paymentMethods.map((method) => ({
+  description:
+    method === "QRIS"
+      ? "Bayar dengan kode QRIS."
+      : "Bayar melalui dompet digital.",
+  label: method,
+  value: method,
+}));
 
 type CheckoutViewProps = {
   tableId: string;
@@ -138,7 +133,7 @@ export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
                 <FieldSet className="px-4">
                   <FieldLegend className="sr-only">Metode pembayaran</FieldLegend>
                   <RadioGroup onValueChange={(value) => setSelectedMethod(value as PaymentMethod)} value={selectedMethod}>
-                    {paymentMethods.map((paymentMethod) => (
+                    {paymentMethodOptions.map((paymentMethod) => (
                       <label className={cn("flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors", selectedMethod === paymentMethod.value && "border-primary bg-primary/5")} key={paymentMethod.value}>
                         <RadioGroupItem className="mt-0.5" value={paymentMethod.value} />
                         <span className="flex flex-col gap-1">
