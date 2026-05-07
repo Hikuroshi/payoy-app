@@ -1,16 +1,7 @@
-import Link from "next/link";
-
+import { notFound } from "next/navigation";
 import { StatusToast } from "@/components/status-toast";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { requireOwnerProfile } from "@/lib/auth/profile";
+import { isUuid } from "@/lib/uuid";
 
 import { updateFood } from "../../actions";
 import { getOwnerFood } from "../../data";
@@ -29,27 +20,6 @@ function getParamValue(
   return typeof value === "string" ? value : undefined;
 }
 
-function ErrorCard({ message }: { message: string }) {
-  return (
-    <Card className="mx-auto w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>Edit Makanan</CardTitle>
-        <CardDescription>Makanan tidak bisa dimuat.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs/relaxed text-destructive">
-          {message}
-        </div>
-      </CardContent>
-      <CardFooter>
-        <Button asChild variant="outline">
-          <Link href="/dashboard/foods">Kembali</Link>
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-}
-
 export default async function EditFoodPage({
   params,
   searchParams,
@@ -60,16 +30,25 @@ export default async function EditFoodPage({
     searchParams,
   ]);
   const error = getParamValue(resolvedSearchParams, "error");
+
+  if (!isUuid(id)) {
+    notFound();
+  }
+
   const { food, error: foodError } = await getOwnerFood(owner.id, id);
+
+  if (!food) {
+    if (foodError === "Makanan tidak ditemukan.") {
+      notFound();
+    }
+
+    throw new Error(foodError ?? "Makanan gagal dimuat.");
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
       <StatusToast error={error} />
-      {food ? (
-        <FoodForm action={updateFood} food={food} mode="edit" />
-      ) : (
-        <ErrorCard message={foodError ?? "Makanan tidak ditemukan."} />
-      )}
+      <FoodForm action={updateFood} food={food} mode="edit" />
     </div>
   );
 }

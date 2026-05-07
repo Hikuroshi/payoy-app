@@ -1,19 +1,14 @@
 import { notFound } from "next/navigation";
-import { createPublicClient } from "@/lib/public-server";
 import { getParamValue, normalizeSearchQuery, toSupabaseLikePattern } from "@/lib/search";
+import { createPublicClient } from "@/lib/public-server";
 
 import { MenuView, type PublicMenuFood } from "./menu-view";
 import { TableDrawer } from "./table-drawer";
+import { getPublicTableWithOwner } from "../_components/table-data";
 
 type MenuPageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
-};
-
-type RestaurantTableRow = {
-  id: string;
-  number: string;
-  owner_id: string;
 };
 
 type FoodRow = {
@@ -38,21 +33,18 @@ function getMenuImageUrl(
 export default async function MenuPage({ params, searchParams }: MenuPageProps) {
   const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const query = normalizeSearchQuery(getParamValue(resolvedSearchParams, "query"));
-  const supabase = createPublicClient();
-  const { data: table, error: tableError } = await supabase
-    .from("restaurant_tables")
-    .select("id, number, owner_id")
-    .eq("id", id)
-    .maybeSingle<RestaurantTableRow>();
+  const table = await getPublicTableWithOwner(id);
 
-  if (tableError || !table) {
+  if (!table) {
     notFound();
   }
+
+  const supabase = createPublicClient();
 
   let foodsRequest = supabase
     .from("foods")
     .select("id, name, description, image_path, price")
-    .eq("owner_id", table.owner_id)
+    .eq("owner_id", table.ownerId)
     .eq("is_available", true)
     .order("name", { ascending: true });
 

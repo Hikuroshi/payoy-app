@@ -1,8 +1,6 @@
-import Link from "next/link";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { notFound } from "next/navigation";
 import { requireAdminProfile } from "@/lib/auth/profile";
+import { isUuid } from "@/lib/uuid";
 
 import { updateDashboardUser } from "../../actions";
 import { getDashboardUser } from "../../data";
@@ -19,36 +17,30 @@ function getParamValue(searchParams: Record<string, string | string[] | undefine
   return typeof value === "string" ? value : undefined;
 }
 
-function ErrorCard({ message }: { message: string }) {
-  return (
-    <Card className="mx-auto w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>Edit User</CardTitle>
-        <CardDescription>User tidak bisa dimuat.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs/relaxed text-destructive">{message}</div>
-      </CardContent>
-      <CardFooter>
-        <Button asChild variant="outline">
-          <Link href="/dashboard/users">Kembali</Link>
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-}
-
 export default async function EditUserPage({ params, searchParams }: EditUserPageProps) {
   await requireAdminProfile();
 
   const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const error = getParamValue(resolvedSearchParams, "error");
+
+  if (!isUuid(id)) {
+    notFound();
+  }
+
   const { user, error: userError } = await getDashboardUser(id);
+
+  if (!user) {
+    if (userError === "User tidak ditemukan.") {
+      notFound();
+    }
+
+    throw new Error(userError ?? "User gagal dimuat.");
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
       <UsersToast error={error} />
-      {user ? <UserForm action={updateDashboardUser} mode="edit" user={user} /> : <ErrorCard message={userError ?? "User tidak ditemukan."} />}
+      <UserForm action={updateDashboardUser} mode="edit" user={user} />
     </div>
   );
 }
