@@ -1,13 +1,6 @@
 import Link from "next/link";
 
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { requireUserProfile } from "@/lib/auth/profile";
 
@@ -38,9 +31,7 @@ export default async function Page() {
       <Card>
         <CardHeader>
           <CardTitle>Pesanan Terbaru</CardTitle>
-          <CardDescription>
-            Data terbaru dari pesanan yang masuk ke meja pelanggan.
-          </CardDescription>
+          <CardDescription>Data terbaru dari pesanan yang masuk ke meja pelanggan.</CardDescription>
           {canManageOrders ? (
             <CardAction>
               <Button asChild size="sm" variant="outline">
@@ -50,12 +41,7 @@ export default async function Page() {
           ) : null}
         </CardHeader>
         <CardContent>
-          <OrdersTable
-            emptyMessage="Belum ada pesanan."
-            orders={summary.recentOrders}
-            redirectTo="/dashboard"
-            showActions={false}
-          />
+          <OrdersTable emptyMessage="Belum ada pesanan." orders={summary.recentOrders} redirectTo="/dashboard" showActions={false} />
         </CardContent>
       </Card>
     </div>
