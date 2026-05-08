@@ -20,6 +20,19 @@ type PublicUser = {
   created_at: string | null;
 };
 
+function isMissingAuthUserError(
+  error: { code?: string; message?: string; status?: number } | null | undefined
+) {
+  const normalizedCode = error?.code?.toLowerCase() ?? "";
+  const normalizedMessage = error?.message?.toLowerCase() ?? "";
+
+  return (
+    error?.status === 404 ||
+    normalizedCode.includes("not_found") ||
+    normalizedMessage.includes("not found")
+  );
+}
+
 export async function getDashboardUsers(query?: string): Promise<{
   users: DashboardUser[];
   error?: string;
@@ -86,6 +99,10 @@ export async function getDashboardUser(id: string): Promise<{
   ]);
 
   if (authError) {
+    if (isMissingAuthUserError(authError)) {
+      return { error: "User tidak ditemukan." };
+    }
+
     return { error: "User gagal dimuat." };
   }
 

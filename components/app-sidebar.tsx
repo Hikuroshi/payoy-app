@@ -16,13 +16,6 @@ const data = {
     name: "shadcn",
     email: "m@example.com",
   },
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: <HugeiconsIcon icon={Settings05Icon} strokeWidth={2} />,
-    },
-  ],
 };
 
 export function AppSidebar({
@@ -91,6 +84,13 @@ export function AppSidebar({
     name: user?.fullName ?? data.user.name,
     email: user?.email ?? data.user.email,
   };
+  const navSecondary = [
+    {
+      title: "Settings",
+      url: "/dashboard/account",
+      icon: <HugeiconsIcon icon={Settings05Icon} strokeWidth={2} />,
+    },
+  ];
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -108,7 +108,7 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={sidebarUser} />

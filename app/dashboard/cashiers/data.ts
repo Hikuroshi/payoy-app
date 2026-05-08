@@ -17,6 +17,19 @@ type PublicCashier = {
   created_at: string | null;
 };
 
+function isMissingAuthUserError(
+  error: { code?: string; message?: string; status?: number } | null | undefined
+) {
+  const normalizedCode = error?.code?.toLowerCase() ?? "";
+  const normalizedMessage = error?.message?.toLowerCase() ?? "";
+
+  return (
+    error?.status === 404 ||
+    normalizedCode.includes("not_found") ||
+    normalizedMessage.includes("not found")
+  );
+}
+
 export async function getOwnerCashiers(
   ownerId: string,
   query?: string
@@ -95,7 +108,15 @@ export async function getOwnerCashier(
       admin.auth.admin.getUserById(id),
     ]);
 
-  if (cashierError || authError) {
+  if (cashierError) {
+    return { error: "Cashier gagal dimuat." };
+  }
+
+  if (authError) {
+    if (isMissingAuthUserError(authError)) {
+      return { error: "Cashier tidak ditemukan." };
+    }
+
     return { error: "Cashier gagal dimuat." };
   }
 
