@@ -3,15 +3,15 @@ import Image from "next/image";
 
 export default function SiteNotFound() {
   return (
-    <main className="bg-background flex min-h-screen items-center justify-center text-center">
-      <section className="flex flex-col w-full items-center">
+    <main className="flex min-h-screen items-center justify-center bg-background text-center">
+      <section className="flex w-full flex-col items-center">
         <div className="relative w-full h-64">
-          <Image src="/img/404.png" alt="Halaman tidak ditemukan" fill priority className="object-contain" />
+          <Image src="/img/404.png" alt="Halaman situs tidak ditemukan" fill priority className="object-contain" />
         </div>
 
         <div className="mt-6">
-          <h1 className="text-3xl font-bold tracking-tight">Halaman tidak ditemukan</h1>
-          <p className="text-muted-foreground mt-1">Halaman situs yang kamu buka tidak tersedia.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Halaman situs tidak ditemukan</h1>
+          <p className="mt-1 text-muted-foreground">Halaman situs yang kamu buka tidak tersedia.</p>
           <div className="mt-6">
             <Link href="/" className="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-10 text-sm font-medium text-primary-foreground shadow transition-colors hover:opacity-90">
               Kembali ke beranda
