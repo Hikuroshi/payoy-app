@@ -2,17 +2,54 @@ import { z } from "zod";
 
 import type { ActionFormState } from "@/lib/action-form";
 
+const authLimits = {
+  email: 254,
+  name: 100,
+  password: 72,
+} as const;
+
+const emailField = z
+  .string()
+  .trim()
+  .min(1, "Email wajib diisi.")
+  .max(authLimits.email, `Email maksimal ${authLimits.email} karakter.`)
+  .email("Masukkan email yang valid.");
+
+const nameField = z
+  .string()
+  .trim()
+  .min(2, "Nama minimal 2 karakter.")
+  .max(authLimits.name, `Nama maksimal ${authLimits.name} karakter.`);
+
+const loginPasswordField = z
+  .string()
+  .min(1, "Password wajib diisi.")
+  .max(128, "Password terlalu panjang.");
+
+const passwordField = z
+  .string()
+  .min(8, "Password minimal 8 karakter.")
+  .max(authLimits.password, `Password maksimal ${authLimits.password} karakter.`);
+
+const confirmPasswordField = z
+  .string()
+  .min(1, "Konfirmasi password wajib diisi.")
+  .max(
+    authLimits.password,
+    `Konfirmasi password maksimal ${authLimits.password} karakter.`
+  );
+
 export const loginSchema = z.object({
-  email: z.string().trim().email("Masukkan email yang valid."),
-  password: z.string().min(1, "Password wajib diisi."),
+  email: emailField,
+  password: loginPasswordField,
 });
 
 export const registerSchema = z
   .object({
-    name: z.string().trim().min(2, "Nama minimal 2 karakter."),
-    email: z.string().trim().email("Masukkan email yang valid."),
-    password: z.string().min(8, "Password minimal 8 karakter."),
-    confirmPassword: z.string().min(1, "Konfirmasi password wajib diisi."),
+    name: nameField,
+    email: emailField,
+    password: passwordField,
+    confirmPassword: confirmPasswordField,
   })
   .refine((data) => data.password === data.confirmPassword, {
     path: ["confirmPassword"],

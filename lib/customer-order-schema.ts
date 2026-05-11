@@ -2,10 +2,27 @@ import { z } from "zod";
 
 import { paymentMethods } from "@/lib/order";
 
+const orderLimits = {
+  note: 200,
+  quantity: 99,
+} as const;
+
+const noteField = z
+  .string()
+  .trim()
+  .max(orderLimits.note, `Catatan maksimal ${orderLimits.note} karakter.`)
+  .optional();
+
+const orderQuantityField = z
+  .number()
+  .int("Jumlah item tidak valid.")
+  .min(1, "Jumlah item minimal 1.")
+  .max(orderLimits.quantity, `Jumlah item maksimal ${orderLimits.quantity}.`);
+
 export const orderItemSchema = z.object({
   id: z.uuid("Makanan tidak valid."),
-  note: z.string().max(200, "Catatan maksimal 200 karakter.").optional(),
-  quantity: z.number().int().min(1).max(99),
+  note: noteField,
+  quantity: orderQuantityField,
 });
 
 export const createCustomerOrderSchema = z.object({

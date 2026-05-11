@@ -2,8 +2,21 @@ import { z } from "zod";
 
 import type { ActionFormState } from "@/lib/action-form";
 
+const tableLimits = {
+  number: 10,
+} as const;
+
+const tableNumberField = z
+  .string()
+  .trim()
+  .min(1, "Nomor meja wajib diisi.")
+  .max(
+    tableLimits.number,
+    `Nomor meja maksimal ${tableLimits.number} karakter.`
+  );
+
 export const tableSchema = z.object({
-  number: z.string().trim().min(1, "Nomor meja wajib diisi."),
+  number: tableNumberField,
 });
 
 export const updateTableSchema = tableSchema.extend({

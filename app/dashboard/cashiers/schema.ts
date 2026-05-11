@@ -2,20 +2,55 @@ import { z } from "zod";
 
 import type { ActionFormState } from "@/lib/action-form";
 
+const cashierLimits = {
+  email: 254,
+  name: 100,
+  password: 72,
+} as const;
+
+const emailField = z
+  .string()
+  .trim()
+  .min(1, "Email wajib diisi.")
+  .max(cashierLimits.email, `Email maksimal ${cashierLimits.email} karakter.`)
+  .email("Email tidak valid.");
+
+const nameField = z
+  .string()
+  .trim()
+  .min(2, "Nama minimal 2 karakter.")
+  .max(cashierLimits.name, `Nama maksimal ${cashierLimits.name} karakter.`);
+
+const passwordField = z
+  .string()
+  .min(8, "Password minimal 8 karakter.")
+  .max(
+    cashierLimits.password,
+    `Password maksimal ${cashierLimits.password} karakter.`
+  );
+
+const optionalPasswordField = z
+  .string()
+  .max(
+    cashierLimits.password,
+    `Password maksimal ${cashierLimits.password} karakter.`
+  )
+  .refine(
+    (password) => password === "" || password.length >= 8,
+    "Password minimal 8 karakter."
+  );
+
 export const createCashierSchema = z.object({
-  email: z.string().trim().email("Email tidak valid."),
-  name: z.string().trim().min(2, "Nama minimal 2 karakter."),
-  password: z.string().min(8, "Password minimal 8 karakter."),
+  email: emailField,
+  name: nameField,
+  password: passwordField,
 });
 
 export const updateCashierSchema = z.object({
-  email: z.string().trim().email("Email tidak valid."),
+  email: emailField,
   id: z.uuid("Cashier tidak valid."),
-  name: z.string().trim().min(2, "Nama minimal 2 karakter."),
-  password: z
-    .string()
-    .refine((password) => password === "" || password.length >= 8, "Password minimal 8 karakter.")
-    .optional(),
+  name: nameField,
+  password: optionalPasswordField.optional(),
 });
 
 export const deleteCashierSchema = z.object({
