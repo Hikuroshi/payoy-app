@@ -72,9 +72,11 @@ export function CustomerPageHeader({
 
 export function CustomerItemImage({
   alt,
+  loading = "lazy",
   src,
 }: {
   alt: string;
+  loading?: "eager" | "lazy";
   src: string;
 }) {
   if (!src) {
@@ -91,6 +93,7 @@ export function CustomerItemImage({
         alt={alt}
         className="object-cover"
         fill
+        loading={loading}
         sizes="80px"
         src={src}
         unoptimized
@@ -159,10 +162,16 @@ export function OrderTotals({
   );
 }
 
-export function OrderItemRow({ item }: { item: CustomerCartItem }) {
+export function OrderItemRow({
+  imageLoading = "lazy",
+  item,
+}: {
+  imageLoading?: "eager" | "lazy";
+  item: CustomerCartItem;
+}) {
   return (
     <div className="flex gap-3 rounded-md border p-3">
-      <CustomerItemImage alt={item.name} src={item.imageUrl} />
+      <CustomerItemImage alt={item.name} loading={imageLoading} src={item.imageUrl} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-start justify-between gap-3">
           <h2 className="line-clamp-2 font-semibold">{item.name}</h2>

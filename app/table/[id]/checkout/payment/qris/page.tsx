@@ -3,6 +3,10 @@ import { getPublicTable } from "../../../_components/table-data";
 
 import { QrisPaymentView } from "./qris-payment-view";
 
+export const metadata = {
+  title: "Pembayaran",
+};
+
 type QrisPaymentPageProps = {
   params: Promise<{ id: string }>;
 };

@@ -7,6 +7,10 @@ import { getDashboardUser } from "../../data";
 import { UsersToast } from "../../users-toast";
 import { UserForm } from "../user-form";
 
+export const metadata = {
+  title: "Edit Pengguna",
+};
+
 type EditUserPageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;

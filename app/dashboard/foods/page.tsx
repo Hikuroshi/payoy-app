@@ -18,6 +18,10 @@ import { requireOwnerProfile } from "@/lib/auth/profile";
 import { getOwnerFoods } from "./data";
 import { FoodsList } from "./foods-list";
 
+export const metadata = {
+  title: "Makanan",
+};
+
 type FoodsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

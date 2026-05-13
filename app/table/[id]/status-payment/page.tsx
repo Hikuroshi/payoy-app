@@ -3,6 +3,10 @@ import { getPublicTable } from "../_components/table-data";
 
 import { PaymentStatusView } from "./payment-status-view";
 
+export const metadata = {
+  title: "Status Pembayaran",
+};
+
 type PaymentStatusPageProps = {
   params: Promise<{ id: string }>;
 };

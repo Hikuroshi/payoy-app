@@ -3,6 +3,10 @@ import { getPublicTable } from "../_components/table-data";
 
 import { CartView } from "./cart-view";
 
+export const metadata = {
+  title: "Keranjang",
+};
+
 type CartPageProps = {
   params: Promise<{ id: string }>;
 };

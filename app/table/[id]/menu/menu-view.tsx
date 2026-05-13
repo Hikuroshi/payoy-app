@@ -67,7 +67,13 @@ function MenuImagePlaceholder({ name }: { name: string }) {
   return <div className="flex aspect-square items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">{getInitials(name)}</div>;
 }
 
-function MenuImage({ item }: { item: PublicMenuFood }) {
+function MenuImage({
+  item,
+  loading = "lazy",
+}: {
+  item: PublicMenuFood;
+  loading?: "eager" | "lazy";
+}) {
   const [loaded, setLoaded] = React.useState(false);
   const [failed, setFailed] = React.useState(false);
 
@@ -78,16 +84,34 @@ function MenuImage({ item }: { item: PublicMenuFood }) {
   return (
     <div className="relative aspect-square overflow-hidden rounded-md bg-muted">
       {!loaded ? <Skeleton className="absolute inset-0 rounded-none" /> : null}
-      <Image alt={item.name} className="object-cover" fill onError={() => setFailed(true)} onLoad={() => setLoaded(true)} sizes="(max-width: 640px) 72px, 84px" src={item.imageUrl} unoptimized />
+      <Image
+        alt={item.name}
+        className="object-cover"
+        fill
+        loading={loading}
+        onError={() => setFailed(true)}
+        onLoad={() => setLoaded(true)}
+        sizes="(max-width: 640px) 72px, 84px"
+        src={item.imageUrl}
+        unoptimized
+      />
     </div>
   );
 }
 
-function MenuItemCard({ item, onAdd }: { item: PublicMenuFood; onAdd: (item: PublicMenuFood) => void }) {
+function MenuItemCard({
+  imageLoading = "lazy",
+  item,
+  onAdd,
+}: {
+  imageLoading?: "eager" | "lazy";
+  item: PublicMenuFood;
+  onAdd: (item: PublicMenuFood) => void;
+}) {
   return (
     <Card className="overflow-hidden p-0">
       <CardContent className="grid grid-cols-[72px_1fr] gap-3 p-2.5 sm:grid-cols-[84px_1fr]">
-        <MenuImage item={item} />
+        <MenuImage item={item} loading={imageLoading} />
 
         <div className="flex min-w-0 flex-col items-start justify-center">
           <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">{item.name}</h3>
@@ -199,8 +223,13 @@ export function MenuView({
             </React.Suspense>
             {foods.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-                {foods.map((item) => (
-                  <MenuItemCard key={item.id} item={item} onAdd={handleAddItem} />
+                {foods.map((item, index) => (
+                  <MenuItemCard
+                    imageLoading={index < 3 ? "eager" : "lazy"}
+                    key={item.id}
+                    item={item}
+                    onAdd={handleAddItem}
+                  />
                 ))}
               </div>
             ) : (

@@ -2,6 +2,10 @@ import { CheckmarkCircle02Icon, DashboardSquare01Icon, Money03Icon, PackageIcon,
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+export const metadata = {
+  title: "Layanan",
+};
+
 const services = [
   {
     title: "QR Code Table Booking",

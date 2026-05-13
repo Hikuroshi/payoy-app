@@ -4,6 +4,10 @@ import { requireOwnerProfile } from "@/lib/auth/profile";
 import { createDashboardCashier } from "../actions";
 import { CashierForm } from "./cashier-form";
 
+export const metadata = {
+  title: "Tambah Cashier",
+};
+
 type CreateCashierPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

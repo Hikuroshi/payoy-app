@@ -13,10 +13,10 @@ const footerNavItems = [
 ];
 
 const socialItems = [
-  { label: "Instagram", href: "#", icon: InstagramIcon },
-  { label: "Facebook", href: "#", icon: Facebook02Icon },
-  { label: "TikTok", href: "#", icon: TiktokIcon },
-  { label: "LinkedIn", href: "#", icon: Linkedin02Icon },
+  { label: "Instagram", href: "https://www.instagram.com/", target: "_blank", rel: "noopener noreferrer", icon: InstagramIcon },
+  { label: "Facebook", href: "https://www.facebook.com/", target: "_blank", rel: "noopener noreferrer", icon: Facebook02Icon },
+  { label: "TikTok", href: "https://www.tiktok.com/", target: "_blank", rel: "noopener noreferrer", icon: TiktokIcon },
+  { label: "LinkedIn", href: "https://www.linkedin.com/", target: "_blank", rel: "noopener noreferrer", icon: Linkedin02Icon },
 ];
 
 export function Footer() {
@@ -47,7 +47,12 @@ export function Footer() {
           <div className="flex flex-wrap gap-2">
             {socialItems.map((item) => (
               <Button key={item.label} variant="outline" size="icon" asChild>
-                <Link href={item.href} aria-label={item.label}>
+                <Link
+                  href={item.href}
+                  aria-label={item.label}
+                  target={item.target}
+                  rel={item.rel}
+                >
                   <HugeiconsIcon icon={item.icon} strokeWidth={2} />
                 </Link>
               </Button>

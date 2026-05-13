@@ -3,6 +3,10 @@ import { getPublicTable } from "../_components/table-data";
 
 import { OrderStatusView } from "./order-status-view";
 
+export const metadata = {
+  title: "Status Pesanan",
+};
+
 type OrderStatusPageProps = {
   params: Promise<{ id: string }>;
 };

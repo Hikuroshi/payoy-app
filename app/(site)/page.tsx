@@ -3,6 +3,10 @@ import { DashboardSquare01Icon, Money03Icon, PackageIcon, QrCodeIcon, QuoteUpIco
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
+export const metadata = {
+  title: "Beranda",
+};
+
 const features = [
   {
     title: "QR Code Table Booking",
@@ -50,11 +54,11 @@ const testimonials = [
 function StoreBadges() {
   return (
     <div className="flex flex-wrap items-center justify-center gap-4">
-      <a href="#download" aria-label="Download Payoy di App Store" className="block rounded-md transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+      <a href="https://apps.apple.com/us/iphone/apps" target="_blank" rel="noopener noreferrer" aria-label="Download Payoy di App Store" className="block rounded-md transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
         <Image src="/img/app-store-badge.svg" alt="Download di App Store" width={120} height={40} className="h-10 w-auto" unoptimized />
       </a>
 
-      <a href="#download" aria-label="Download Payoy di Google Play" className="block rounded-md transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+      <a href="https://play.google.com/store/apps" target="_blank" rel="noopener noreferrer" aria-label="Download Payoy di Google Play" className="block rounded-md transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
         <Image src="/img/google-play-badge.svg" alt="Dapatkan di Google Play" width={135} height={40} className="h-10 w-auto" unoptimized />
       </a>
     </div>

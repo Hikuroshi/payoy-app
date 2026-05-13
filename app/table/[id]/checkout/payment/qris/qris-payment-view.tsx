@@ -10,45 +10,17 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import {
-  clearCart,
-  createOrderSnapshot,
-  formatDateTime,
-  formatPrice,
-  saveOrder,
-} from "../../../_components/customer-cart";
-import {
-  CustomerPageHeader,
-  CustomerPageShell,
-  EmptyCustomerState,
-} from "../../../_components/customer-order-ui";
-import {
-  createCustomerOrder,
-  markCustomerOrderPaid,
-} from "../../../_components/order-actions";
-import {
-  useCartItems,
-  useLatestOrder,
-} from "../../../_components/customer-store-hooks";
+import { clearCart, createOrderSnapshot, formatDateTime, formatPrice, saveOrder } from "../../../_components/customer-cart";
+import { CustomerPageHeader, CustomerPageShell, EmptyCustomerState } from "../../../_components/customer-order-ui";
+import { createCustomerOrder, markCustomerOrderPaid } from "../../../_components/order-actions";
+import { useCartItems, useLatestOrder } from "../../../_components/customer-store-hooks";
 
 function QrisCode() {
   return (
     <div className="flex size-56 items-center justify-center rounded-md border bg-background p-3">
-      <Image
-        alt="QRIS pembayaran Payoy"
-        className="size-full object-contain"
-        height={200}
-        src="/img/qrcode_example_pay.png"
-        width={200}
-      />
+      <Image alt="QRIS pembayaran Payoy" className="size-full object-contain" height={200} src="/img/qrcode_example_pay.png" width={200} loading="eager" />
     </div>
   );
 }
@@ -58,10 +30,7 @@ type QrisPaymentViewProps = {
   tableNumber: string;
 };
 
-export function QrisPaymentView({
-  tableId,
-  tableNumber,
-}: QrisPaymentViewProps) {
+export function QrisPaymentView({ tableId, tableNumber }: QrisPaymentViewProps) {
   const router = useRouter();
   const items = useCartItems(tableId);
   const order = useLatestOrder(tableId);
@@ -140,30 +109,15 @@ export function QrisPaymentView({
   if (!order) {
     return (
       <CustomerPageShell>
-        <CustomerPageHeader
-          backHref={`/table/${tableId}/checkout`}
-          description="Tidak ada pesanan yang perlu dibayar."
-          tableNumber={tableNumber}
-          title="QRIS"
-        />
-        <EmptyCustomerState
-          description="Kembali ke menu untuk membuat pesanan baru."
-          href={`/table/${tableId}/menu`}
-          label="Lihat menu"
-          title="Pesanan tidak ditemukan"
-        />
+        <CustomerPageHeader backHref={`/table/${tableId}/checkout`} description="Tidak ada pesanan yang perlu dibayar." tableNumber={tableNumber} title="QRIS" />
+        <EmptyCustomerState description="Kembali ke menu untuk membuat pesanan baru." href={`/table/${tableId}/menu`} label="Lihat menu" title="Pesanan tidak ditemukan" />
       </CustomerPageShell>
     );
   }
 
   return (
     <CustomerPageShell>
-      <CustomerPageHeader
-        backHref={`/table/${tableId}/checkout`}
-        description={`Metode ${order.paymentMethod}. Berlaku sampai ${formatDateTime(order.expiryAt)}.`}
-        tableNumber={tableNumber}
-        title="Menunggu pembayaran"
-      />
+      <CustomerPageHeader backHref={`/table/${tableId}/checkout`} description={`Metode ${order.paymentMethod}. Berlaku sampai ${formatDateTime(order.expiryAt)}.`} tableNumber={tableNumber} title="Menunggu pembayaran" />
 
       <Card className="mx-auto w-full max-w-sm text-center">
         <CardHeader>
@@ -179,9 +133,7 @@ export function QrisPaymentView({
               <HugeiconsIcon className="text-primary" icon={Wallet01Icon} size={56} />
               <div className="flex flex-col gap-1">
                 <p className="font-semibold">E-Wallet</p>
-                <p className="text-xs text-muted-foreground">
-                  Tekan tombol Bayar untuk menyelesaikan pembayaran.
-                </p>
+                <p className="text-xs text-muted-foreground">Tekan tombol Bayar untuk menyelesaikan pembayaran.</p>
               </div>
             </div>
           )}
@@ -203,9 +155,7 @@ export function QrisPaymentView({
               </Button>
             ) : null}
             <Button asChild variant="outline">
-              <Link href={`/table/${tableId}/checkout`}>
-                Ganti metode pembayaran
-              </Link>
+              <Link href={`/table/${tableId}/checkout`}>Ganti metode pembayaran</Link>
             </Button>
           </div>
         </CardContent>

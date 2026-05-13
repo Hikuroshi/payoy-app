@@ -18,6 +18,10 @@ import { requireOwnerProfile } from "@/lib/auth/profile";
 import { getOwnerTables } from "./data";
 import { TablesList } from "./tables-list";
 
+export const metadata = {
+  title: "Meja",
+};
+
 type TablesPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

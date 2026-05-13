@@ -3,6 +3,10 @@ import { getPublicTable } from "../_components/table-data";
 
 import { CheckoutView } from "./checkout-view";
 
+export const metadata = {
+  title: "Checkout",
+};
+
 type CheckoutPageProps = {
   params: Promise<{ id: string }>;
 };

@@ -40,15 +40,24 @@ type CheckoutViewProps = {
 export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
   const router = useRouter();
   const items = useCartItems(tableId);
+  const paymentTriggerRef = React.useRef<HTMLButtonElement | null>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [method, setMethod] = React.useState<PaymentMethod | null>(null);
   const [selectedMethod, setSelectedMethod] = React.useState<PaymentMethod>("QRIS");
   const [isPending, startTransition] = React.useTransition();
 
+  function openPaymentDrawer() {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    setSelectedMethod(method ?? "QRIS");
+    setDrawerOpen(true);
+  }
+
   function handlePay() {
     if (!method) {
-      setSelectedMethod("QRIS");
-      setDrawerOpen(true);
+      openPaymentDrawer();
       return;
     }
 
@@ -97,8 +106,12 @@ export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
             <CardTitle>{getTotalQuantity(items)} item pesanan</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            {items.map((item) => (
-              <OrderItemRow item={item} key={item.id} />
+            {items.map((item, index) => (
+              <OrderItemRow
+                imageLoading={index < 2 ? "eager" : "lazy"}
+                item={item}
+                key={item.id}
+              />
             ))}
           </CardContent>
         </Card>
@@ -111,6 +124,7 @@ export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
           <CardContent className="flex flex-col gap-2">
             <OrderTotals {...totals} />
             <Drawer
+              autoFocus
               open={drawerOpen}
               onOpenChange={(open) => {
                 setDrawerOpen(open);
@@ -121,7 +135,14 @@ export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
               }}
             >
               <DrawerTrigger asChild>
-                <Button type="button" variant="outline">
+                <Button
+                  ref={paymentTriggerRef}
+                  onClick={(event) => {
+                    event.currentTarget.blur();
+                  }}
+                  type="button"
+                  variant="outline"
+                >
                   {method ? `Metode: ${method}` : "Pilih Pembayaran"}
                 </Button>
               </DrawerTrigger>

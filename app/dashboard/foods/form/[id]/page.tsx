@@ -7,6 +7,10 @@ import { updateFood } from "../../actions";
 import { getOwnerFood } from "../../data";
 import { FoodForm } from "../food-form";
 
+export const metadata = {
+  title: "Edit Makanan",
+};
+
 type EditFoodPageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;

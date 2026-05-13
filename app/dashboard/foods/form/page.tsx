@@ -4,6 +4,10 @@ import { requireOwnerProfile } from "@/lib/auth/profile";
 import { createFood } from "../actions";
 import { FoodForm } from "./food-form";
 
+export const metadata = {
+  title: "Tambah Makanan",
+};
+
 type CreateFoodPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

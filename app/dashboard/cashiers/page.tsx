@@ -18,6 +18,10 @@ import { requireOwnerProfile } from "@/lib/auth/profile";
 import { getOwnerCashiers } from "./data";
 import { CashiersTable } from "./cashiers-table";
 
+export const metadata = {
+  title: "Cashier",
+};
+
 type CashiersPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

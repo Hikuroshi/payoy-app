@@ -15,6 +15,10 @@ import { requireOrderStaffProfile } from "@/lib/auth/profile";
 import { getDashboardOrders } from "./data";
 import { OrdersTable } from "./orders-table";
 
+export const metadata = {
+  title: "Pesanan",
+};
+
 type OrdersPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

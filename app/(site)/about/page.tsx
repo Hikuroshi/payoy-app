@@ -1,6 +1,10 @@
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 
+export const metadata = {
+  title: "Tentang Kami",
+};
+
 const storyItems = [
   {
     label: "History",

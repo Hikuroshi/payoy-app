@@ -7,6 +7,10 @@ import { requireUserProfile } from "@/lib/auth/profile";
 import { getDashboardSummary } from "./data";
 import { OrdersTable } from "./orders/orders-table";
 
+export const metadata = {
+  title: "Dashboard",
+};
+
 export default async function Page() {
   const profile = await requireUserProfile();
   const summary = await getDashboardSummary(profile);

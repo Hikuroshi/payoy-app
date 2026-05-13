@@ -7,6 +7,10 @@ import { updateDashboardCashier } from "../../actions";
 import { getOwnerCashier } from "../../data";
 import { CashierForm } from "../cashier-form";
 
+export const metadata = {
+  title: "Edit Cashier",
+};
+
 type EditCashierPageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;

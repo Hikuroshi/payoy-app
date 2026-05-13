@@ -6,6 +6,10 @@ import { MenuView, type PublicMenuFood } from "./menu-view";
 import { TableDrawer } from "./table-drawer";
 import { getPublicTableWithOwner } from "../_components/table-data";
 
+export const metadata = {
+  title: "Menu Meja",
+};
+
 type MenuPageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;

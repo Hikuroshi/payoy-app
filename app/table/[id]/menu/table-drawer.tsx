@@ -19,7 +19,14 @@ export function TableDrawer({ tableNumber }: { tableNumber: string }) {
           </DrawerHeader>
 
           <div className="relative mt-11 h-57 w-full overflow-hidden rounded-xl shadow-sm">
-            <Image src="/img/placeholder-meja.jpg" alt="Meja tersedia" fill preload sizes="(max-width: 640px) 100vw, 384px" className="object-cover" />
+            <Image
+              src="/img/placeholder-meja.jpg"
+              alt="Meja tersedia"
+              fill
+              loading="eager"
+              sizes="(max-width: 640px) 100vw, 384px"
+              className="object-cover"
+            />
           </div>
 
           <p className="mt-11 text-lg font-medium leading-6">

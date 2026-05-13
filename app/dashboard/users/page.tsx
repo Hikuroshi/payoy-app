@@ -11,6 +11,10 @@ import { getDashboardUsers } from "./data";
 import { UsersTable } from "./users-table";
 import { UsersToast } from "./users-toast";
 
+export const metadata = {
+  title: "Pengguna",
+};
+
 type UsersPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

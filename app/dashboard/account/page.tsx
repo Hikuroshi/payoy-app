@@ -4,6 +4,10 @@ import { requireUserProfile } from "@/lib/auth/profile";
 import { updateOwnAccount } from "./actions";
 import { AccountForm } from "./account-form";
 
+export const metadata = {
+  title: "Akun",
+};
+
 type AccountPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

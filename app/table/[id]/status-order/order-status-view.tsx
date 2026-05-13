@@ -1,35 +1,16 @@
 "use client";
 
-import {
-  CheckmarkCircle02Icon,
-  Clock01Icon,
-  Task01Icon,
-} from "@hugeicons/core-free-icons";
+import { CheckmarkCircle02Icon, Clock01Icon, Task01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import StepProgress from "@/components/ui/stepper";
 
-import {
-  formatDateTime,
-  formatPrice,
-  type CustomerOrderStatus,
-} from "../_components/customer-cart";
-import {
-  CustomerPageHeader,
-  CustomerPageShell,
-  EmptyCustomerState,
-  OrderItemRow,
-} from "../_components/customer-order-ui";
+import { formatDateTime, formatPrice, type CustomerOrderStatus } from "../_components/customer-cart";
+import { CustomerPageHeader, CustomerPageShell, EmptyCustomerState, OrderItemRow } from "../_components/customer-order-ui";
 import { useSyncedLatestOrder } from "../_components/customer-store-hooks";
 
 const steps = [
@@ -87,13 +68,7 @@ type OrderStatusViewProps = {
   tableNumber: string;
 };
 
-function OrderLifecycleCard({
-  children,
-  status,
-}: {
-  children: React.ReactNode;
-  status: CustomerOrderStatus;
-}) {
+function OrderLifecycleCard({ children, status }: { children: React.ReactNode; status: CustomerOrderStatus }) {
   const currentStatus = orderStatuses[status];
   const currentStep = currentStatus.step;
 
@@ -113,38 +88,21 @@ function OrderLifecycleCard({
   );
 }
 
-export function OrderStatusView({
-  tableId,
-  tableNumber,
-}: OrderStatusViewProps) {
+export function OrderStatusView({ tableId, tableNumber }: OrderStatusViewProps) {
   const order = useSyncedLatestOrder(tableId);
 
   if (!order) {
     return (
       <CustomerPageShell>
-        <CustomerPageHeader
-          backHref={`/table/${tableId}/menu`}
-          description="Belum ada pesanan untuk meja ini."
-          tableNumber={tableNumber}
-          title="Status Pesanan"
-        />
-        <EmptyCustomerState
-          description="Kembali ke menu untuk membuat pesanan baru."
-          href={`/table/${tableId}/menu`}
-          label="Lihat menu"
-          title="Pesanan tidak ditemukan"
-        />
+        <CustomerPageHeader backHref={`/table/${tableId}/menu`} description="Belum ada pesanan untuk meja ini." tableNumber={tableNumber} title="Status Pesanan" />
+        <EmptyCustomerState description="Kembali ke menu untuk membuat pesanan baru." href={`/table/${tableId}/menu`} label="Lihat menu" title="Pesanan tidak ditemukan" />
       </CustomerPageShell>
     );
   }
 
   return (
     <CustomerPageShell>
-      <CustomerPageHeader
-        description="Pesanan sudah diterima dan sedang diproses."
-        tableNumber={tableNumber}
-        title="Status Pesanan"
-      />
+      <CustomerPageHeader description="Pesanan sudah diterima dan sedang diproses." tableNumber={tableNumber} title="Status Pesanan" />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <OrderLifecycleCard key={order.id} status={order.status}>
@@ -163,9 +121,7 @@ export function OrderStatusView({
             </div>
             <div className="mt-3 flex items-center justify-between gap-3">
               <span className="text-muted-foreground">Waktu</span>
-              <span className="text-right font-semibold">
-                {formatDateTime(order.createdAt)}
-              </span>
+              <span className="text-right font-semibold">{formatDateTime(order.createdAt)}</span>
             </div>
             <div className="mt-4 border-t border-dashed pt-4">
               <div className="flex items-center justify-between gap-3 text-base">
@@ -182,7 +138,7 @@ export function OrderStatusView({
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {order.items.map((item) => (
-              <OrderItemRow item={item} key={item.id} />
+              <OrderItemRow item={item} key={item.id} imageLoading="eager" />
             ))}
             <Button asChild className="mt-2">
               <Link href={`/table/${tableId}/menu`}>Kembali ke menu</Link>

@@ -4,6 +4,10 @@ import { createRestaurantTable } from "../actions";
 import { StatusToast } from "@/components/status-toast";
 import { TableForm } from "./table-form";
 
+export const metadata = {
+  title: "Tambah Meja",
+};
+
 type CreateTablePageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

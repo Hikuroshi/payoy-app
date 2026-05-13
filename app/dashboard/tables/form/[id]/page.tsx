@@ -7,6 +7,10 @@ import { updateRestaurantTable } from "../../actions";
 import { getOwnerTable } from "../../data";
 import { TableForm } from "../table-form";
 
+export const metadata = {
+  title: "Edit Meja",
+};
+
 type EditTablePageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;

@@ -126,10 +126,14 @@ export function CartView({ tableId, tableNumber }: CartViewProps) {
             <CardTitle>{getTotalQuantity(optimisticItems)} item pesanan</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            {optimisticItems.map((item) => (
+            {optimisticItems.map((item, index) => (
               <div className="flex flex-col gap-3 rounded-md border p-3" key={item.id}>
                 <div className="flex gap-3">
-                  <CustomerItemImage alt={item.name} src={item.imageUrl} />
+                  <CustomerItemImage
+                    alt={item.name}
+                    loading={index < 2 ? "eager" : "lazy"}
+                    src={item.imageUrl}
+                  />
                   <div className="flex min-w-0 flex-1 flex-col gap-2">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
