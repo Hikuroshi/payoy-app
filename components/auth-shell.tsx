@@ -7,7 +7,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       <section className="flex flex-col gap-8 p-6 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
           <Link href="/" className="flex items-center gap-2 text-sm font-semibold">
-            <Image src="/img/payoy-logo.png" alt="Payoy" width={28} height={28} className="size-7 object-contain" />
+            <Image src="/img/payoy-logo.png" alt="Payoy" width={28} height={28} className="size-7 object-contain" loading="eager" />
             <span>Payoy!</span>
           </Link>
         </div>

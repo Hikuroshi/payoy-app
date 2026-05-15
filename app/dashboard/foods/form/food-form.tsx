@@ -24,24 +24,36 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
+import type { FoodCategoryOption } from "@/app/dashboard/categories/data";
 import type { Food } from "../data";
 import { initialFoodFormState, type FoodFormState } from "../schema";
 
 type FoodFormProps = {
   action: (state: FoodFormState, formData: FormData) => Promise<FoodFormState>;
+  categories: FoodCategoryOption[];
   food?: Food;
   mode: "create" | "edit";
 };
 
-export function FoodForm({ action, food, mode }: FoodFormProps) {
+export function FoodForm({ action, categories, food, mode }: FoodFormProps) {
   const isEdit = mode === "edit";
   const [state, formAction] = useActionState(action, initialFoodFormState);
+  const categoryError = state.errors?.category_id?.[0];
   const nameError = state.errors?.name?.[0];
   const priceError = state.errors?.price?.[0];
   const descriptionError = state.errors?.description?.[0];
   const imageError = state.errors?.image?.[0];
+  const defaultCategory = state.values?.category_id ?? food?.categoryId ?? "__none";
   const defaultName = state.values?.name ?? food?.name ?? "";
   const defaultPrice = state.values?.price ?? String(food?.price ?? "");
   const defaultDescription = state.values?.description ?? food?.description ?? "";
@@ -63,6 +75,29 @@ export function FoodForm({ action, food, mode }: FoodFormProps) {
             {isEdit && food ? (
               <input name="id" type="hidden" value={food.id} />
             ) : null}
+            <Field data-invalid={!!categoryError}>
+              <FieldLabel htmlFor="category_id">Kategori</FieldLabel>
+              <Select defaultValue={defaultCategory} name="category_id">
+                <SelectTrigger
+                  aria-invalid={!!categoryError}
+                  className="w-full"
+                  id="category_id"
+                >
+                  <SelectValue placeholder="Pilih kategori" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="__none">Tanpa kategori</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <FieldError>{categoryError}</FieldError>
+            </Field>
             <Field data-invalid={!!nameError}>
               <FieldLabel htmlFor="name">Nama</FieldLabel>
               <Input aria-invalid={!!nameError} defaultValue={defaultName} id="name" name="name" required />

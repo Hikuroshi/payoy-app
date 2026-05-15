@@ -6,6 +6,8 @@ import { createClient } from "@/lib/server";
 const menuImageBucket = "menu_image";
 
 export type Food = {
+  categoryId: string;
+  categoryName: string;
   id: string;
   name: string;
   description: string;
@@ -17,6 +19,8 @@ export type Food = {
 };
 
 type FoodRow = {
+  category_id: string | null;
+  category: { name: string } | null;
   id: string;
   name: string;
   description: string | null;
@@ -48,7 +52,9 @@ export async function getOwnerFoods(
   const supabase = await createClient();
   let request = supabase
     .from("foods")
-    .select("id, name, description, image_path, price, is_available, created_at")
+    .select(
+      "id, name, description, image_path, price, is_available, created_at, category_id, category:food_categories!foods_category_id_fkey(name)"
+    )
     .eq("owner_id", ownerId)
     .order("name", { ascending: true });
 
@@ -65,6 +71,8 @@ export async function getOwnerFoods(
   return {
     foods: (data ?? []).map((food) => ({
       id: food.id,
+      categoryId: food.category_id ?? "",
+      categoryName: food.category?.name ?? "",
       name: food.name,
       description: food.description ?? "",
       imagePath: food.image_path ?? "",
@@ -86,7 +94,9 @@ export async function getOwnerFood(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("foods")
-    .select("id, name, description, image_path, price, is_available, created_at")
+    .select(
+      "id, name, description, image_path, price, is_available, created_at, category_id, category:food_categories!foods_category_id_fkey(name)"
+    )
     .eq("id", id)
     .eq("owner_id", ownerId)
     .maybeSingle<FoodRow>();
@@ -102,6 +112,8 @@ export async function getOwnerFood(
   return {
     food: {
       id: data.id,
+      categoryId: data.category_id ?? "",
+      categoryName: data.category?.name ?? "",
       name: data.name,
       description: data.description ?? "",
       imagePath: data.image_path ?? "",

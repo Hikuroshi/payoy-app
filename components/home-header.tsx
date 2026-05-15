@@ -28,7 +28,7 @@ export function Header({ demoCustomerHref = "/dashboard" }: { demoCustomerHref?:
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 text-sm font-semibold tracking-normal text-foreground transition-colors hover:text-primary">
-          <Image src="/img/payoy-logo.png" alt="Payoy" width={832} height={832} className="size-10 object-contain" sizes="40px" priority />
+          <Image src="/img/payoy-logo.png" alt="Payoy" width={832} height={832} className="size-10 object-contain" sizes="40px" priority loading="eager" />
           <span>Payoy!</span>
         </Link>
 

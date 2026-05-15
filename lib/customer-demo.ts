@@ -8,7 +8,8 @@ type DemoTableRow = {
 
 export async function getDemoCustomerHref(
   ownerId?: string,
-  fallback = "/dashboard"
+  fallback = "/dashboard",
+  returnTo = fallback
 ) {
   const supabase = createPublicClient();
   let query = supabase
@@ -26,5 +27,10 @@ export async function getDemoCustomerHref(
     return fallback;
   }
 
-  return `/table/${data.id}/menu`;
+  const params = new URLSearchParams({
+    demo: "1",
+    returnTo,
+  });
+
+  return `/table/${data.id}/menu?${params.toString()}`;
 }

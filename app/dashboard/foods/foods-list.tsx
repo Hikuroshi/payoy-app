@@ -57,6 +57,11 @@ function FoodRow({ food, onDelete }: { food: Food; onDelete: (id: string) => voi
           <FoodThumbnail food={food} />
           <div className="flex min-w-0 flex-col gap-1">
             <span className="truncate font-medium">{food.name}</span>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">
+                {food.categoryName || "Tanpa kategori"}
+              </Badge>
+            </div>
             <span className="text-[0.625rem] text-muted-foreground">Dibuat {new Date(food.createdAt).toLocaleDateString("id-ID")}</span>
           </div>
         </div>

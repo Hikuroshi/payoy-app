@@ -25,7 +25,15 @@ export function Footer() {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-10 md:grid-cols-[1.8fr_1fr_1fr]">
         <div className="flex flex-col gap-5">
           <Link href="/" className="flex items-center gap-3 text-2xl font-semibold tracking-normal text-foreground transition-colors hover:text-primary">
-            <Image src="/img/payoy-logo.png" alt="Payoy" width={832} height={832} className="size-12 object-contain" sizes="48px" />
+            <Image
+              src="/img/payoy-logo.png"
+              alt="Payoy"
+              width={832}
+              height={832}
+              className="size-12 object-contain"
+              sizes="48px"
+              loading="eager"
+            />
             <span>Payoy!</span>
           </Link>
           <p className="max-w-md text-sm leading-7 text-muted-foreground">Payoy adalah platform modern yang membantu pengguna mengelola kebutuhan digital dengan lebih mudah, cepat, dan nyaman.</p>
@@ -47,12 +55,7 @@ export function Footer() {
           <div className="flex flex-wrap gap-2">
             {socialItems.map((item) => (
               <Button key={item.label} variant="outline" size="icon" asChild>
-                <Link
-                  href={item.href}
-                  aria-label={item.label}
-                  target={item.target}
-                  rel={item.rel}
-                >
+                <Link href={item.href} aria-label={item.label} target={item.target} rel={item.rel}>
                   <HugeiconsIcon icon={item.icon} strokeWidth={2} />
                 </Link>
               </Button>

@@ -55,11 +55,11 @@ function StoreBadges() {
   return (
     <div className="flex flex-wrap items-center justify-center gap-4">
       <a href="https://apps.apple.com/us/iphone/apps" target="_blank" rel="noopener noreferrer" aria-label="Download Payoy di App Store" className="block rounded-md transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-        <Image src="/img/app-store-badge.svg" alt="Download di App Store" width={120} height={40} className="h-10 w-auto" unoptimized />
+        <Image src="/img/app-store-badge.svg" alt="Download di App Store" width={120} height={40} className="h-10 w-auto" unoptimized loading="eager" />
       </a>
 
       <a href="https://play.google.com/store/apps" target="_blank" rel="noopener noreferrer" aria-label="Download Payoy di Google Play" className="block rounded-md transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-        <Image src="/img/google-play-badge.svg" alt="Dapatkan di Google Play" width={135} height={40} className="h-10 w-auto" unoptimized />
+        <Image src="/img/google-play-badge.svg" alt="Dapatkan di Google Play" width={135} height={40} className="h-10 w-auto" unoptimized loading="eager" />
       </a>
     </div>
   );
@@ -76,7 +76,7 @@ export default function Home() {
         </div>
         <div className="mt-20 w-full md:mt-24">
           <div className="mx-auto w-full max-w-70 overflow-hidden rounded-lg border bg-card shadow-xl shadow-foreground/10">
-            <Image src="/img/payoy-example.png" alt="Tampilan contoh aplikasi Payoy" width={440} height={956} className="h-auto w-full" sizes="280px" />
+            <Image src="/img/payoy-example.png" alt="Tampilan contoh aplikasi Payoy" width={440} height={956} className="h-auto w-full" sizes="280px" loading="eager" />
           </div>
         </div>
       </section>
@@ -122,7 +122,14 @@ export default function Home() {
 
               <CardFooter className="mt-4 gap-3">
                 <div className="relative size-12 shrink-0 overflow-hidden rounded-full bg-muted">
-                  <Image src={testimonial.avatar} alt={testimonial.name} fill sizes="48px" className="object-cover" />
+                  <Image
+                    src={testimonial.avatar}
+                    alt={testimonial.name}
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                    loading="eager"
+                  />
                 </div>
                 <div>
                   <h3 className="font-semibold">{testimonial.name}</h3>

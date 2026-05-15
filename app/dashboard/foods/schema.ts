@@ -37,6 +37,13 @@ const priceField = z
   );
 
 export const foodSchema = z.object({
+  categoryId: z
+    .union([
+      z.literal(""),
+      z.literal("__none"),
+      z.uuid("Kategori tidak valid."),
+    ])
+    .transform((value) => (value === "" || value === "__none" ? null : value)),
   name: foodNameField,
   description: foodDescriptionField,
   price: priceField,
@@ -52,6 +59,7 @@ export const deleteFoodSchema = z.object({
 });
 
 type FoodFormFields =
+  | "category_id"
   | "name"
   | "description"
   | "price"
@@ -59,6 +67,7 @@ type FoodFormFields =
   | "is_available";
 
 export type FoodFormValues = {
+  category_id: string;
   description: string;
   is_available: boolean;
   name: string;

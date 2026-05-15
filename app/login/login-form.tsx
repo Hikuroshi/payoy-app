@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { login } from "@/app/auth/actions";
-import { Button } from "@/components/ui/button";
+import { PendingButton } from "@/components/pending-button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { initialAuthFormState } from "@/app/auth/schema";
 import { cn } from "@/lib/utils";
 
 export function LoginForm({ className, ...props }: React.ComponentProps<"form">) {
-  const [state, formAction, pending] = useActionState(login, initialAuthFormState);
+  const [state, formAction] = useActionState(login, initialAuthFormState);
   const emailError = state.errors?.email?.[0];
   const passwordError = state.errors?.password?.[0];
 
@@ -51,9 +51,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
         </CardContent>
 
         <CardFooter className="flex-col gap-4">
-          <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? "Memproses..." : "Masuk"}
-          </Button>
+          <PendingButton className="w-full" pendingText="Memproses..." type="submit">
+            Masuk
+          </PendingButton>
           <FieldDescription className="text-center">
             Belum punya akun?{" "}
             <Link href="/register" className="underline underline-offset-4">

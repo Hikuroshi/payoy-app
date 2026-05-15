@@ -8,7 +8,7 @@ import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Clock01Icon, CommandIcon, DashboardSquare01Icon, DiningTableIcon, LeftToRightListBulletIcon, MenuRestaurantIcon, Settings05Icon, UserArrowLeftRightIcon, UserGroupIcon } from "@hugeicons/core-free-icons";
+import { Clock01Icon, CommandIcon, DashboardSquare01Icon, DiningTableIcon, LeftToRightListBulletIcon, MenuRestaurantIcon, PackageIcon, Settings05Icon, UserArrowLeftRightIcon, UserGroupIcon } from "@hugeicons/core-free-icons";
 import type { CurrentUserProfile } from "@/lib/auth/profile";
 
 const data = {
@@ -66,6 +66,11 @@ export function AppSidebar({
             title: "Makanan",
             url: "/dashboard/foods",
             icon: <HugeiconsIcon icon={MenuRestaurantIcon} strokeWidth={2} />,
+          },
+          {
+            title: "Kategori",
+            url: "/dashboard/categories",
+            icon: <HugeiconsIcon icon={PackageIcon} strokeWidth={2} />,
           },
           {
             title: "Cashier",

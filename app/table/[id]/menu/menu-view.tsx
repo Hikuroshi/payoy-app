@@ -6,20 +6,18 @@ import * as React from "react";
 import { toast } from "sonner";
 
 import { UrlSearchInput } from "@/components/url-search-input";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
-import {
-  addCartItem,
-  formatPrice,
-  getCartTotals,
-  getTotalQuantity,
-  type CustomerCartItem,
-} from "../_components/customer-cart";
+import { addCartItem, formatPrice, getCartTotals, getTotalQuantity, type CustomerCartItem } from "../_components/customer-cart";
 import { useCartItems } from "../_components/customer-store-hooks";
 
 export type PublicMenuFood = {
+  categoryName: string;
   id: string;
   name: string;
   description: string;
@@ -32,10 +30,7 @@ type CartOptimisticAction = {
   type: "add";
 };
 
-function reduceCartItems(
-  currentItems: CustomerCartItem[],
-  action: CartOptimisticAction
-) {
+function reduceCartItems(currentItems: CustomerCartItem[], action: CartOptimisticAction) {
   if (action.type !== "add") {
     return currentItems;
   }
@@ -43,11 +38,7 @@ function reduceCartItems(
   const currentItem = currentItems.find((item) => item.id === action.item.id);
 
   if (currentItem) {
-    return currentItems.map((item) =>
-      item.id === action.item.id
-        ? { ...item, quantity: item.quantity + 1 }
-        : item
-    );
+    return currentItems.map((item) => (item.id === action.item.id ? { ...item, quantity: item.quantity + 1 } : item));
   }
 
   return [...currentItems, { ...action.item, note: "", quantity: 1 }];
@@ -63,64 +54,68 @@ function getInitials(value: string) {
     .toUpperCase();
 }
 
-function MenuImagePlaceholder({ name }: { name: string }) {
-  return <div className="flex aspect-square items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">{getInitials(name)}</div>;
+function MenuImagePlaceholder({ className, name }: { className?: string; name: string }) {
+  return <div className={cn("flex items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground", className)}>{getInitials(name)}</div>;
 }
 
-function MenuImage({
-  item,
-  loading = "lazy",
-}: {
-  item: PublicMenuFood;
-  loading?: "eager" | "lazy";
-}) {
+function MenuImage({ containerClassName, item, loading = "lazy", sizes = "(max-width: 640px) 72px, 84px" }: { containerClassName?: string; item: PublicMenuFood; loading?: "eager" | "lazy"; sizes?: string }) {
   const [loaded, setLoaded] = React.useState(false);
   const [failed, setFailed] = React.useState(false);
 
   if (!item.imageUrl || failed) {
-    return <MenuImagePlaceholder name={item.name} />;
+    return <MenuImagePlaceholder className={containerClassName} name={item.name} />;
   }
 
   return (
-    <div className="relative aspect-square overflow-hidden rounded-md bg-muted">
+    <div className={cn("relative overflow-hidden rounded-md bg-muted", containerClassName)}>
       {!loaded ? <Skeleton className="absolute inset-0 rounded-none" /> : null}
-      <Image
-        alt={item.name}
-        className="object-cover"
-        fill
-        loading={loading}
-        onError={() => setFailed(true)}
-        onLoad={() => setLoaded(true)}
-        sizes="(max-width: 640px) 72px, 84px"
-        src={item.imageUrl}
-        unoptimized
-      />
+      <Image alt={item.name} className="object-cover" fill loading={loading} onError={() => setFailed(true)} onLoad={() => setLoaded(true)} sizes={sizes} src={item.imageUrl} unoptimized />
     </div>
   );
 }
 
-function MenuItemCard({
-  imageLoading = "lazy",
-  item,
-  onAdd,
-}: {
-  imageLoading?: "eager" | "lazy";
-  item: PublicMenuFood;
-  onAdd: (item: PublicMenuFood) => void;
-}) {
+function MenuItemCard({ imageLoading = "lazy", item, onAdd, onSelect }: { imageLoading?: "eager" | "lazy"; item: PublicMenuFood; onAdd: (item: PublicMenuFood) => void; onSelect: (item: PublicMenuFood) => void }) {
   return (
     <Card className="overflow-hidden p-0">
-      <CardContent className="grid grid-cols-[72px_1fr] gap-3 p-2.5 sm:grid-cols-[84px_1fr]">
-        <MenuImage item={item} loading={imageLoading} />
+      <CardContent
+        className="grid cursor-pointer grid-cols-[72px_1fr] gap-3 p-2.5 transition-colors hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 sm:grid-cols-[84px_1fr]"
+        onClick={() => onSelect(item)}
+        onKeyDown={(event) => {
+          if (event.target !== event.currentTarget) {
+            return;
+          }
+
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onSelect(item);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+      >
+        <MenuImage containerClassName="aspect-square" item={item} loading={imageLoading} />
 
         <div className="flex min-w-0 flex-col items-start justify-center">
+          {item.categoryName ? (
+            <Badge className="mb-1" variant="outline">
+              {item.categoryName}
+            </Badge>
+          ) : null}
           <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">{item.name}</h3>
 
           <p className="mt-0.5 text-xs text-muted-foreground">{formatPrice(item.price)}</p>
 
           {item.description ? <p className="mt-1 line-clamp-1 text-[0.625rem] text-muted-foreground">{item.description}</p> : null}
 
-          <Button type="button" size="sm" className="mt-2 h-7 min-w-20 px-3 text-xs" onClick={() => onAdd(item)}>
+          <Button
+            type="button"
+            size="sm"
+            className="mt-2 h-7 min-w-20 px-3 text-xs"
+            onClick={(event) => {
+              event.stopPropagation();
+              onAdd(item);
+            }}
+          >
             Tambah
           </Button>
         </div>
@@ -139,15 +134,49 @@ function MenuEmptyState({ message }: { message: string }) {
   );
 }
 
-function CheckoutBar({
-  count,
-  href,
-  total,
-}: {
-  count: number;
-  href: string;
-  total: number;
-}) {
+function MenuDetailDrawer({ item, onAdd, onOpenChange }: { item: PublicMenuFood | null; onAdd: (item: PublicMenuFood) => void; onOpenChange: (open: boolean) => void }) {
+  if (!item) {
+    return null;
+  }
+
+  return (
+    <Drawer open={Boolean(item)} onOpenChange={onOpenChange}>
+      <DrawerContent className="p-0 before:inset-0 before:rounded-t-3xl before:rounded-b-none data-[vaul-drawer-direction=bottom]:max-h-[90dvh]">
+        <div className="mx-auto flex min-h-0 w-full max-w-md flex-col">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-2">
+            <div className="flex flex-col gap-4">
+              <MenuImage containerClassName="aspect-[4/3] w-full rounded-xl" item={item} loading="eager" sizes="(max-width: 640px) 100vw, 448px" />
+
+              <div className="flex items-start justify-between gap-3">
+                <DrawerHeader className="min-w-0 p-0 text-left">
+                  {item.categoryName ? (
+                    <Badge className="mb-2 w-fit" variant="outline">
+                      {item.categoryName}
+                    </Badge>
+                  ) : null}
+                  <DrawerTitle className="text-start text-base font-semibold text-foreground">{item.name}</DrawerTitle>
+                  <DrawerDescription className="mt-1 text-start text-sm text-muted-foreground">
+                    {item.description || "Menu yang sedap dan menggoda untuk anda makan."}
+                  </DrawerDescription>
+                </DrawerHeader>
+
+                <p className="shrink-0 pt-0.5 text-sm font-semibold text-foreground">{formatPrice(item.price)}</p>
+              </div>
+            </div>
+          </div>
+
+          <DrawerFooter className="mt-0 shrink-0 border-t bg-background/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+            <Button className="w-full" onClick={() => onAdd(item)} type="button">
+              Tambah ke keranjang
+            </Button>
+          </DrawerFooter>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+function CheckoutBar({ count, href, total }: { count: number; href: string; total: number }) {
   return (
     <div className="fixed inset-x-0 bottom-0 border-t bg-background/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-4 py-3 sm:px-5 md:px-6">
@@ -170,24 +199,10 @@ function CheckoutBar({
   );
 }
 
-export function MenuView({
-  errorMessage,
-  foods,
-  query,
-  tableId,
-  tableNumber,
-}: {
-  errorMessage?: string;
-  foods: PublicMenuFood[];
-  query?: string;
-  tableId: string;
-  tableNumber: string;
-}) {
+export function MenuView({ errorMessage, foods, query, tableId, tableNumber }: { errorMessage?: string; foods: PublicMenuFood[]; query?: string; tableId: string; tableNumber: string }) {
   const cartItems = useCartItems(tableId);
-  const [optimisticCartItems, applyOptimisticCart] = React.useOptimistic(
-    cartItems,
-    reduceCartItems
-  );
+  const [selectedItem, setSelectedItem] = React.useState<PublicMenuFood | null>(null);
+  const [optimisticCartItems, applyOptimisticCart] = React.useOptimistic(cartItems, reduceCartItems);
   const cartTotals = getCartTotals(optimisticCartItems);
   const cartCount = getTotalQuantity(optimisticCartItems);
 
@@ -197,6 +212,11 @@ export function MenuView({
     });
     addCartItem(tableId, item);
     toast.success(`${item.name} ditambahkan ke keranjang`, { position: "top-center", duration: 1800 });
+  }
+
+  function handleAddFromDrawer(item: PublicMenuFood) {
+    handleAddItem(item);
+    setSelectedItem(null);
   }
 
   return (
@@ -224,32 +244,26 @@ export function MenuView({
             {foods.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                 {foods.map((item, index) => (
-                  <MenuItemCard
-                    imageLoading={index < 3 ? "eager" : "lazy"}
-                    key={item.id}
-                    item={item}
-                    onAdd={handleAddItem}
-                  />
+                  <MenuItemCard imageLoading={index < 3 ? "eager" : "lazy"} key={item.id} item={item} onAdd={handleAddItem} onSelect={setSelectedItem} />
                 ))}
               </div>
             ) : (
-              <MenuEmptyState
-                message={
-                  errorMessage ??
-                  (query
-                    ? `Tidak ada menu yang cocok dengan "${query}".`
-                    : "Menu belum tersedia untuk meja ini.")
-                }
-              />
+              <MenuEmptyState message={errorMessage ?? (query ? `Tidak ada menu yang cocok dengan "${query}".` : "Menu belum tersedia untuk meja ini.")} />
             )}
           </div>
         </section>
       </div>
 
-      <CheckoutBar
-        count={cartCount}
-        href={`/table/${tableId}/cart`}
-        total={cartTotals.subtotal}
+      <CheckoutBar count={cartCount} href={`/table/${tableId}/cart`} total={cartTotals.subtotal} />
+
+      <MenuDetailDrawer
+        item={selectedItem}
+        onAdd={handleAddFromDrawer}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedItem(null);
+          }
+        }}
       />
     </div>
   );

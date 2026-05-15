@@ -147,9 +147,19 @@ create table if not exists public.restaurant_tables (
   unique (owner_id, number)
 );
 
+create table if not exists public.food_categories (
+  id uuid primary key default extensions.gen_random_uuid(),
+  owner_id uuid not null references public.users(id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (owner_id, name)
+);
+
 create table if not exists public.foods (
   id uuid primary key default extensions.gen_random_uuid(),
   owner_id uuid not null references public.users(id) on delete cascade,
+  category_id uuid references public.food_categories(id) on delete set null,
   name text not null,
   description text,
   image_path text,
@@ -162,11 +172,23 @@ create table if not exists public.foods (
 alter table public.foods
 add column if not exists image_path text;
 
+alter table public.foods
+add column if not exists category_id uuid references public.food_categories(id) on delete set null;
+
 create index if not exists restaurant_tables_owner_id_idx
 on public.restaurant_tables (owner_id);
 
+create index if not exists food_categories_owner_id_idx
+on public.food_categories (owner_id);
+
+create index if not exists food_categories_owner_name_idx
+on public.food_categories (owner_id, name);
+
 create index if not exists foods_owner_id_idx
 on public.foods (owner_id);
+
+create index if not exists foods_category_id_idx
+on public.foods (category_id);
 
 create index if not exists foods_owner_available_idx
 on public.foods (owner_id, is_available);
@@ -175,6 +197,7 @@ create index if not exists users_owner_role_idx
 on public.users (owner_id, role);
 
 alter table public.restaurant_tables enable row level security;
+alter table public.food_categories enable row level security;
 alter table public.foods enable row level security;
 
 drop policy if exists "Tables are readable for menu" on public.restaurant_tables;
@@ -214,6 +237,37 @@ on public.foods
 for select
 to anon, authenticated
 using (is_available);
+
+drop policy if exists "Food categories are readable for menu" on public.food_categories;
+create policy "Food categories are readable for menu"
+on public.food_categories
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Owners can manage own food categories" on public.food_categories;
+create policy "Owners can manage own food categories"
+on public.food_categories
+for all
+to authenticated
+using (
+  owner_id = (select auth.uid())
+  and exists (
+    select 1
+    from public.users
+    where users.id = (select auth.uid())
+      and users.role = 'owner'
+  )
+)
+with check (
+  owner_id = (select auth.uid())
+  and exists (
+    select 1
+    from public.users
+    where users.id = (select auth.uid())
+      and users.role = 'owner'
+  )
+);
 
 drop policy if exists "Owners can manage own foods" on public.foods;
 create policy "Owners can manage own foods"

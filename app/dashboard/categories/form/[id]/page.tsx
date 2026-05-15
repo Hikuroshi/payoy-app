@@ -1,18 +1,18 @@
 import { notFound } from "next/navigation";
+
 import { StatusToast } from "@/components/status-toast";
 import { requireOwnerProfile } from "@/lib/auth/profile";
 import { isUuid } from "@/lib/uuid";
 
-import { getOwnerCategoryOptions } from "@/app/dashboard/categories/data";
-import { updateFood } from "../../actions";
-import { getOwnerFood } from "../../data";
-import { FoodForm } from "../food-form";
+import { updateCategory } from "../../actions";
+import { getOwnerCategory } from "../../data";
+import { CategoryForm } from "../category-form";
 
 export const metadata = {
-  title: "Edit Makanan",
+  title: "Edit Kategori",
 };
 
-type EditFoodPageProps = {
+type EditCategoryPageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
@@ -25,10 +25,10 @@ function getParamValue(
   return typeof value === "string" ? value : undefined;
 }
 
-export default async function EditFoodPage({
+export default async function EditCategoryPage({
   params,
   searchParams,
-}: EditFoodPageProps) {
+}: EditCategoryPageProps) {
   const owner = await requireOwnerProfile();
   const [{ id }, resolvedSearchParams] = await Promise.all([
     params,
@@ -40,28 +40,20 @@ export default async function EditFoodPage({
     notFound();
   }
 
-  const [{ food, error: foodError }, categories] = await Promise.all([
-    getOwnerFood(owner.id, id),
-    getOwnerCategoryOptions(owner.id),
-  ]);
+  const { category, error: categoryError } = await getOwnerCategory(owner.id, id);
 
-  if (!food) {
-    if (foodError === "Makanan tidak ditemukan.") {
+  if (!category) {
+    if (categoryError === "Kategori tidak ditemukan.") {
       notFound();
     }
 
-    throw new Error(foodError ?? "Makanan gagal dimuat.");
+    throw new Error(categoryError ?? "Kategori gagal dimuat.");
   }
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
       <StatusToast error={error} />
-      <FoodForm
-        action={updateFood}
-        categories={categories}
-        food={food}
-        mode="edit"
-      />
+      <CategoryForm action={updateCategory} category={category} mode="edit" />
     </div>
   );
 }

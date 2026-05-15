@@ -12,55 +12,55 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getParamValue, normalizeSearchQuery } from "@/lib/search";
 import { requireOwnerProfile } from "@/lib/auth/profile";
+import { getParamValue, normalizeSearchQuery } from "@/lib/search";
 
-import { getOwnerFoods } from "./data";
-import { FoodsList } from "./foods-list";
+import { CategoriesList } from "./categories-list";
+import { getOwnerCategories } from "./data";
 
 export const metadata = {
-  title: "Makanan",
+  title: "Kategori",
 };
 
-type FoodsPageProps = {
+type CategoriesPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function FoodsPage({ searchParams }: FoodsPageProps) {
+export default async function CategoriesPage({
+  searchParams,
+}: CategoriesPageProps) {
   const owner = await requireOwnerProfile();
   const resolvedSearchParams = await searchParams;
   const success = getParamValue(resolvedSearchParams, "success");
   const error = getParamValue(resolvedSearchParams, "error");
   const query = normalizeSearchQuery(getParamValue(resolvedSearchParams, "query"));
-  const { foods, error: foodsError } = await getOwnerFoods(owner.id, query);
+  const { categories, error: categoriesError } = await getOwnerCategories(
+    owner.id,
+    query
+  );
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
-      <StatusToast error={error ?? foodsError} success={success} />
+      <StatusToast error={error ?? categoriesError} success={success} />
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-1">
-            <CardTitle>Data Makanan</CardTitle>
+            <CardTitle>Data Kategori</CardTitle>
             <CardDescription>
-              Kelola {foods.length} makanan milik owner yang login beserta kategorinya.
+              Kelola {categories.length} kategori untuk mengelompokkan makanan.
             </CardDescription>
           </div>
           <CardAction>
-            <div className="flex gap-2">
-              <Button asChild variant="outline">
-                <Link href="/dashboard/categories">Kategori</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/dashboard/foods/form">Tambah makanan</Link>
-              </Button>
-            </div>
+            <Button asChild>
+              <Link href="/dashboard/categories/form">Tambah kategori</Link>
+            </Button>
           </CardAction>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <Suspense fallback={null}>
-            <UrlSearchInput placeholder="Cari nama makanan..." />
+            <UrlSearchInput placeholder="Cari nama kategori..." />
           </Suspense>
-          <FoodsList foods={foods} />
+          <CategoriesList categories={categories} />
         </CardContent>
       </Card>
     </div>

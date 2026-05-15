@@ -7,7 +7,7 @@ export default async function SiteLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const demoCustomerHref = await getDemoCustomerHref(undefined, "/dashboard");
+  const demoCustomerHref = await getDemoCustomerHref(undefined, "/dashboard", "/");
 
   return (
     <div className="flex min-h-svh flex-col">

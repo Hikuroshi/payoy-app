@@ -70,6 +70,29 @@ async function uploadFoodImage(supabase: Awaited<ReturnType<typeof createClient>
   return { error, path };
 }
 
+async function getOwnerCategoryId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ownerId: string,
+  categoryId: string | null
+) {
+  if (!categoryId) {
+    return { categoryId: null };
+  }
+
+  const { data, error } = await supabase
+    .from("food_categories")
+    .select("id")
+    .eq("id", categoryId)
+    .eq("owner_id", ownerId)
+    .maybeSingle<{ id: string }>();
+
+  if (error || !data) {
+    return { error: "Kategori tidak valid." };
+  }
+
+  return { categoryId: data.id };
+}
+
 function redirectWith(type: "success" | "error", message: string, path = foodsPath): never {
   const searchParams = new URLSearchParams({ [type]: message });
   redirect(`${path}?${searchParams.toString()}`);
@@ -92,6 +115,7 @@ function mapFoodFieldErrors(
   errors: Record<string, string[] | undefined>
 ): FoodFormState["errors"] {
   return {
+    category_id: errors.categoryId,
     description: errors.description,
     is_available: errors.isAvailable,
     name: errors.name,
@@ -105,6 +129,7 @@ export async function createFood(
 ): Promise<FoodFormState> {
   const owner = await requireOwnerProfile();
   const values = {
+    category_id: getFormString(formData, "category_id"),
     description: getFormString(formData, "description"),
     is_available: getFormBoolean(formData, "is_available"),
     name: getFormString(formData, "name"),
@@ -112,6 +137,7 @@ export async function createFood(
   };
   const image = getImageFile(formData);
   const parsed = foodSchema.safeParse({
+    categoryId: values.category_id,
     name: values.name,
     description: values.description,
     price: values.price,
@@ -133,6 +159,18 @@ export async function createFood(
   }
 
   const supabase = await createClient();
+  const category = await getOwnerCategoryId(
+    supabase,
+    owner.id,
+    parsed.data.categoryId
+  );
+
+  if (category.error) {
+    return createFoodFormState(values, "Periksa kembali data makanan.", {
+      category_id: [category.error],
+    });
+  }
+
   const foodId = randomUUID();
   let imagePath: string | null = null;
 
@@ -151,6 +189,7 @@ export async function createFood(
   const { error } = await supabase.from("foods").insert({
     id: foodId,
     owner_id: owner.id,
+    category_id: category.categoryId,
     name: parsed.data.name,
     description: parsed.data.description || null,
     image_path: imagePath,
@@ -176,6 +215,7 @@ export async function updateFood(
 ): Promise<FoodFormState> {
   const owner = await requireOwnerProfile();
   const values = {
+    category_id: getFormString(formData, "category_id"),
     description: getFormString(formData, "description"),
     is_available: getFormBoolean(formData, "is_available"),
     name: getFormString(formData, "name"),
@@ -184,6 +224,7 @@ export async function updateFood(
   const image = getImageFile(formData);
   const parsed = updateFoodSchema.safeParse({
     id: getFormString(formData, "id"),
+    categoryId: values.category_id,
     name: values.name,
     description: values.description,
     price: values.price,
@@ -205,6 +246,18 @@ export async function updateFood(
   }
 
   const supabase = await createClient();
+  const category = await getOwnerCategoryId(
+    supabase,
+    owner.id,
+    parsed.data.categoryId
+  );
+
+  if (category.error) {
+    return createFoodFormState(values, "Periksa kembali data makanan.", {
+      category_id: [category.error],
+    });
+  }
+
   let imagePath: string | undefined;
   let previousImagePath: string | null = null;
 
@@ -227,6 +280,7 @@ export async function updateFood(
   const { error } = await supabase
     .from("foods")
     .update({
+      category_id: category.categoryId,
       name: parsed.data.name,
       description: parsed.data.description || null,
       ...(imagePath ? { image_path: imagePath } : {}),

@@ -8,7 +8,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const profile = await requireUserProfile();
   const demoCustomerHref =
     profile.role === "owner"
-      ? await getDemoCustomerHref(profile.id, "/dashboard/tables")
+      ? await getDemoCustomerHref(profile.id, "/dashboard/tables", "/dashboard")
       : "/dashboard";
 
   return (

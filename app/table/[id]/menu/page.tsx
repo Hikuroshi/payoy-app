@@ -16,6 +16,7 @@ type MenuPageProps = {
 };
 
 type FoodRow = {
+  category: { name: string } | null;
   id: string;
   name: string;
   description: string | null;
@@ -34,9 +35,21 @@ function getMenuImageUrl(
   return supabase.storage.from("menu_image").getPublicUrl(path).data.publicUrl;
 }
 
+function getDemoReturnTo(searchParams: Record<string, string | string[] | undefined>) {
+  const demo = getParamValue(searchParams, "demo");
+  const returnTo = getParamValue(searchParams, "returnTo");
+
+  if (demo !== "1" || !returnTo || !returnTo.startsWith("/") || returnTo.startsWith("//")) {
+    return undefined;
+  }
+
+  return returnTo;
+}
+
 export default async function MenuPage({ params, searchParams }: MenuPageProps) {
   const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const query = normalizeSearchQuery(getParamValue(resolvedSearchParams, "query"));
+  const demoReturnTo = getDemoReturnTo(resolvedSearchParams);
   const table = await getPublicTableWithOwner(id);
 
   if (!table) {
@@ -47,7 +60,7 @@ export default async function MenuPage({ params, searchParams }: MenuPageProps) 
 
   let foodsRequest = supabase
     .from("foods")
-    .select("id, name, description, image_path, price")
+    .select("id, name, description, image_path, price, category:food_categories!foods_category_id_fkey(name)")
     .eq("owner_id", table.ownerId)
     .eq("is_available", true)
     .order("name", { ascending: true });
@@ -60,6 +73,7 @@ export default async function MenuPage({ params, searchParams }: MenuPageProps) 
 
   const menuFoods: PublicMenuFood[] = (foods ?? []).map((food) => ({
     id: food.id,
+    categoryName: food.category?.name ?? "",
     name: food.name,
     description: food.description ?? "",
     imageUrl: getMenuImageUrl(supabase, food.image_path),
@@ -75,7 +89,11 @@ export default async function MenuPage({ params, searchParams }: MenuPageProps) 
         tableId={table.id}
         tableNumber={table.number}
       />
-      <TableDrawer tableNumber={table.number} />
+      <TableDrawer
+        closeHref={demoReturnTo}
+        showCloseButton={Boolean(demoReturnTo)}
+        tableNumber={table.number}
+      />
     </main>
   );
 }

@@ -1,15 +1,14 @@
 import { StatusToast } from "@/components/status-toast";
 import { requireOwnerProfile } from "@/lib/auth/profile";
 
-import { getOwnerCategoryOptions } from "@/app/dashboard/categories/data";
-import { createFood } from "../actions";
-import { FoodForm } from "./food-form";
+import { createCategory } from "../actions";
+import { CategoryForm } from "./category-form";
 
 export const metadata = {
-  title: "Tambah Makanan",
+  title: "Tambah Kategori",
 };
 
-type CreateFoodPageProps = {
+type CreateCategoryPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
@@ -21,19 +20,18 @@ function getParamValue(
   return typeof value === "string" ? value : undefined;
 }
 
-export default async function CreateFoodPage({
+export default async function CreateCategoryPage({
   searchParams,
-}: CreateFoodPageProps) {
-  const owner = await requireOwnerProfile();
+}: CreateCategoryPageProps) {
+  await requireOwnerProfile();
 
   const resolvedSearchParams = await searchParams;
   const error = getParamValue(resolvedSearchParams, "error");
-  const categories = await getOwnerCategoryOptions(owner.id);
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
       <StatusToast error={error} />
-      <FoodForm action={createFood} categories={categories} mode="create" />
+      <CategoryForm action={createCategory} mode="create" />
     </div>
   );
 }

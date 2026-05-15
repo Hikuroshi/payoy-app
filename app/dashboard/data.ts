@@ -90,7 +90,7 @@ async function getRevenue(profile: CurrentUserProfile) {
 
 async function getOwnerResourceCount(
   profile: CurrentUserProfile,
-  table: "foods" | "restaurant_tables"
+  table: "food_categories" | "foods" | "restaurant_tables"
 ) {
   const supabase = await createClient();
   let query = supabase.from(table).select("id", {
@@ -181,8 +181,9 @@ export async function getDashboardSummary(
     };
   }
 
-  const [tables, foods] = await Promise.all([
+  const [tables, categories, foods] = await Promise.all([
     getOwnerResourceCount(profile, "restaurant_tables"),
+    getOwnerResourceCount(profile, "food_categories"),
     getOwnerResourceCount(profile, "foods"),
   ]);
 
@@ -206,12 +207,12 @@ export async function getDashboardSummary(
       {
         description:
           profile.role === "owner"
-            ? `${tables} meja dan ${foods} menu tersedia.`
+            ? `${tables} meja, ${categories} kategori, dan ${foods} menu tersedia.`
             : "Meja dan menu yang bisa dilihat cashier.",
         label: profile.role === "owner" ? "Outlet" : "Menu Tersedia",
         value:
           profile.role === "owner"
-            ? `${tables}/${foods}`
+            ? `${tables}/${categories}/${foods}`
             : foods.toLocaleString("id-ID"),
       },
     ],
