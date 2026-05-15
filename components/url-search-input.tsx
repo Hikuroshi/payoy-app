@@ -7,12 +7,19 @@ import { Input } from "@/components/ui/input";
 
 type UrlSearchInputProps = {
   className?: string;
+  clearKeysOnChange?: string[];
   debounceMs?: number;
   placeholder: string;
   queryKey?: string;
 };
 
-export function UrlSearchInput({ className, debounceMs = 1000, placeholder, queryKey = "query" }: UrlSearchInputProps) {
+export function UrlSearchInput({
+  className,
+  clearKeysOnChange = [],
+  debounceMs = 1000,
+  placeholder,
+  queryKey = "query",
+}: UrlSearchInputProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -36,6 +43,7 @@ export function UrlSearchInput({ className, debounceMs = 1000, placeholder, quer
 
         nextParams.delete("success");
         nextParams.delete("error");
+        clearKeysOnChange.forEach((key) => nextParams.delete(key));
 
         if (normalizedValue) {
           nextParams.set(queryKey, normalizedValue);
@@ -54,7 +62,7 @@ export function UrlSearchInput({ className, debounceMs = 1000, placeholder, quer
         });
       }, debounceMs);
     },
-    [debounceMs, pathname, queryKey, router, searchParams],
+    [clearKeysOnChange, debounceMs, pathname, queryKey, router, searchParams],
   );
 
   return <Input aria-label={placeholder} className={className} defaultValue={defaultValue} key={`${pathname}:${defaultValue}`} onChange={handleChange} placeholder={placeholder} type="search" />;
