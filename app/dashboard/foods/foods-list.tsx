@@ -58,9 +58,7 @@ function FoodRow({ food, onDelete }: { food: Food; onDelete: (id: string) => voi
           <div className="flex min-w-0 flex-col gap-1">
             <span className="truncate font-medium">{food.name}</span>
             <div className="flex items-center gap-2">
-              <Badge variant="outline">
-                {food.categoryName || "Tanpa kategori"}
-              </Badge>
+              <Badge variant="outline">{food.categoryName || "Tanpa kategori"}</Badge>
             </div>
             <span className="text-[0.625rem] text-muted-foreground">Dibuat {new Date(food.createdAt).toLocaleDateString("id-ID")}</span>
           </div>
@@ -87,7 +85,7 @@ export function FoodsList({ foods }: { foods: Food[] }) {
   const [optimisticFoods, removeFood] = React.useOptimistic(foods, (currentFoods: Food[], deletedId: string) => currentFoods.filter((food) => food.id !== deletedId));
 
   if (!optimisticFoods.length) {
-    return <div className="rounded-lg border border-dashed p-6 text-center text-xs/relaxed text-muted-foreground">Belum ada makanan.</div>;
+    return <div className="rounded-lg border border-dashed p-6 text-center text-xs/relaxed text-muted-foreground">Belum ada menu.</div>;
   }
 
   return (

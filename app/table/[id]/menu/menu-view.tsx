@@ -131,32 +131,29 @@ function MenuItemCard({ imageLoading = "lazy", item, onAdd, onSelect }: { imageL
   );
 }
 
-function CategoryFilterScroller({
-  categories,
-  selectedCategoryId,
-}: {
-  categories: PublicMenuCategory[];
-  selectedCategoryId?: string;
-}) {
+function CategoryFilterScroller({ categories, selectedCategoryId }: { categories: PublicMenuCategory[]; selectedCategoryId?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const handleSelect = React.useCallback((categoryId: string) => {
-    const nextParams = new URLSearchParams(searchParams.toString());
+  const handleSelect = React.useCallback(
+    (categoryId: string) => {
+      const nextParams = new URLSearchParams(searchParams.toString());
 
-    if (selectedCategoryId === categoryId) {
-      nextParams.delete("category");
-    } else {
-      nextParams.set("category", categoryId);
-    }
+      if (selectedCategoryId === categoryId) {
+        nextParams.delete("category");
+      } else {
+        nextParams.set("category", categoryId);
+      }
 
-    const nextSearch = nextParams.toString();
+      const nextSearch = nextParams.toString();
 
-    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, {
-      scroll: false,
-    });
-  }, [pathname, router, searchParams, selectedCategoryId]);
+      router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, {
+        scroll: false,
+      });
+    },
+    [pathname, router, searchParams, selectedCategoryId],
+  );
 
   if (categories.length === 0) {
     return null;
@@ -169,31 +166,9 @@ function CategoryFilterScroller({
           const isActive = selectedCategoryId === category.id;
 
           return (
-            <button
-              aria-pressed={isActive}
-              className="flex w-20 shrink-0 flex-col items-center gap-2 text-center"
-              key={category.id}
-              onClick={() => handleSelect(category.id)}
-              type="button"
-            >
-              <div className={cn("relative size-16 overflow-hidden rounded-full border-2 border-transparent bg-muted transition-all", isActive ? "border-primary ring-2 ring-primary/20" : "border-border/60")}>
-                {category.imageUrl ? (
-                  <Image
-                    alt={category.name}
-                    className="object-cover"
-                    fill
-                    loading={index < 4 ? "eager" : "lazy"}
-                    sizes="64px"
-                    src={category.imageUrl}
-                    unoptimized
-                  />
-                ) : (
-                  <MenuImagePlaceholder className="size-full rounded-full text-sm" name={category.name} />
-                )}
-              </div>
-              <span className={cn("line-clamp-2 text-xs leading-tight text-muted-foreground", isActive && "font-semibold text-foreground")}>
-                {category.name}
-              </span>
+            <button aria-pressed={isActive} className="flex w-20 shrink-0 flex-col items-center gap-2 text-center" key={category.id} onClick={() => handleSelect(category.id)} type="button">
+              <div className={cn("relative size-16 overflow-hidden rounded-full border-2 border-transparent bg-muted transition-all", isActive ? "border-primary ring-2 ring-primary/20" : "border-border/60")}>{category.imageUrl ? <Image alt={category.name} className="object-cover" fill loading={index < 4 ? "eager" : "lazy"} sizes="64px" src={category.imageUrl} unoptimized /> : <MenuImagePlaceholder className="size-full rounded-full text-sm" name={category.name} />}</div>
+              <span className={cn("line-clamp-2 text-xs leading-tight text-muted-foreground", isActive && "font-semibold text-foreground")}>{category.name}</span>
             </button>
           );
         })}
@@ -275,25 +250,7 @@ function CheckoutBar({ count, href, total }: { count: number; href: string; tota
   );
 }
 
-export function MenuView({
-  categories,
-  errorMessage,
-  foods,
-  query,
-  selectedCategoryId,
-  selectedCategoryName,
-  tableId,
-  tableNumber,
-}: {
-  categories: PublicMenuCategory[];
-  errorMessage?: string;
-  foods: PublicMenuFood[];
-  query?: string;
-  selectedCategoryId?: string;
-  selectedCategoryName?: string;
-  tableId: string;
-  tableNumber: string;
-}) {
+export function MenuView({ categories, errorMessage, foods, query, selectedCategoryId, selectedCategoryName, tableId, tableNumber }: { categories: PublicMenuCategory[]; errorMessage?: string; foods: PublicMenuFood[]; query?: string; selectedCategoryId?: string; selectedCategoryName?: string; tableId: string; tableNumber: string }) {
   const cartItems = useCartItems(tableId);
   const [selectedItem, setSelectedItem] = React.useState<PublicMenuFood | null>(null);
   const [optimisticCartItems, applyOptimisticCart] = React.useOptimistic(cartItems, reduceCartItems);
@@ -328,7 +285,7 @@ export function MenuView({
 
         <section className="mt-5">
           <React.Suspense fallback={null}>
-            <UrlSearchInput className="mb-3.5" clearKeysOnChange={["category"]} placeholder="Cari menu makanan..." />
+            <UrlSearchInput className="mb-3.5" clearKeysOnChange={["category"]} placeholder="Cari menu..." />
           </React.Suspense>
 
           {categories.length > 0 ? (
@@ -340,9 +297,7 @@ export function MenuView({
           ) : null}
 
           <div className="flex items-end justify-between gap-3">
-            <h2 className="min-w-0 truncate text-xl font-extrabold leading-tight tracking-normal sm:text-2xl">
-              {query ? "Hasil pencarian" : selectedCategoryName ?? "Menu Makanan"}
-            </h2>
+            <h2 className="min-w-0 truncate text-xl font-extrabold leading-tight tracking-normal sm:text-2xl">{query ? "Hasil pencarian" : (selectedCategoryName ?? "Menu")}</h2>
           </div>
 
           <div className="mt-3.5">

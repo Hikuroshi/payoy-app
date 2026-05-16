@@ -3,10 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createAdminClient, hasSupabaseAdminConfig } from "@/lib/admin";
-import {
-  createCustomerOrderSchema,
-  markCustomerOrderPaidSchema,
-} from "@/lib/customer-order-schema";
+import { createCustomerOrderSchema, markCustomerOrderPaidSchema } from "@/lib/customer-order-schema";
 import { createPublicClient } from "@/lib/public-server";
 
 import type { CustomerOrder, CustomerOrderStatus } from "./customer-cart";
@@ -84,7 +81,7 @@ export async function createCustomerOrder(input: unknown): Promise<{ error: stri
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   if (!orderItems.length) {
-    return { error: "Makanan tidak tersedia." };
+    return { error: "Menu tidak tersedia." };
   }
 
   const subtotal = orderItems.reduce((total, item) => total + item.price * item.quantity, 0);

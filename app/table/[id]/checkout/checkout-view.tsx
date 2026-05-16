@@ -24,10 +24,7 @@ const paymentMethodOptions: {
   label: PaymentMethod;
   value: PaymentMethod;
 }[] = paymentMethods.map((method) => ({
-  description:
-    method === "QRIS"
-      ? "Bayar dengan kode QRIS."
-      : "Bayar melalui dompet digital.",
+  description: method === "QRIS" ? "Bayar dengan kode QRIS." : "Bayar melalui dompet digital.",
   label: method,
   value: method,
 }));
@@ -89,7 +86,7 @@ export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
     return (
       <CustomerPageShell>
         <CustomerPageHeader backHref={`/table/${tableId}/cart`} description="Keranjang meja ini masih kosong." tableNumber={tableNumber} title="Checkout" />
-        <EmptyCustomerState description="Tambahkan makanan sebelum melanjutkan checkout." href={`/table/${tableId}/menu`} label="Lihat menu" title="Belum ada pesanan" />
+        <EmptyCustomerState description="Tambahkan menu sebelum melanjutkan checkout." href={`/table/${tableId}/menu`} label="Lihat menu" title="Belum ada pesanan" />
       </CustomerPageShell>
     );
   }
@@ -107,11 +104,7 @@ export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {items.map((item, index) => (
-              <OrderItemRow
-                imageLoading={index < 2 ? "eager" : "lazy"}
-                item={item}
-                key={item.id}
-              />
+              <OrderItemRow imageLoading={index < 2 ? "eager" : "lazy"} item={item} key={item.id} />
             ))}
           </CardContent>
         </Card>

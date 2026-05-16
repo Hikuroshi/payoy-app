@@ -9,7 +9,7 @@ import { getOwnerFood } from "../../data";
 import { FoodForm } from "../food-form";
 
 export const metadata = {
-  title: "Edit Makanan",
+  title: "Edit Menu",
 };
 
 type EditFoodPageProps = {
@@ -17,51 +17,34 @@ type EditFoodPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-function getParamValue(
-  searchParams: Record<string, string | string[] | undefined>,
-  key: string
-) {
+function getParamValue(searchParams: Record<string, string | string[] | undefined>, key: string) {
   const value = searchParams[key];
   return typeof value === "string" ? value : undefined;
 }
 
-export default async function EditFoodPage({
-  params,
-  searchParams,
-}: EditFoodPageProps) {
+export default async function EditFoodPage({ params, searchParams }: EditFoodPageProps) {
   const owner = await requireOwnerProfile();
-  const [{ id }, resolvedSearchParams] = await Promise.all([
-    params,
-    searchParams,
-  ]);
+  const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const error = getParamValue(resolvedSearchParams, "error");
 
   if (!isUuid(id)) {
     notFound();
   }
 
-  const [{ food, error: foodError }, categories] = await Promise.all([
-    getOwnerFood(owner.id, id),
-    getOwnerCategoryOptions(owner.id),
-  ]);
+  const [{ food, error: foodError }, categories] = await Promise.all([getOwnerFood(owner.id, id), getOwnerCategoryOptions(owner.id)]);
 
   if (!food) {
-    if (foodError === "Makanan tidak ditemukan.") {
+    if (foodError === "Menu tidak ditemukan.") {
       notFound();
     }
 
-    throw new Error(foodError ?? "Makanan gagal dimuat.");
+    throw new Error(foodError ?? "Menu gagal dimuat.");
   }
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
       <StatusToast error={error} />
-      <FoodForm
-        action={updateFood}
-        categories={categories}
-        food={food}
-        mode="edit"
-      />
+      <FoodForm action={updateFood} categories={categories} food={food} mode="edit" />
     </div>
   );
 }

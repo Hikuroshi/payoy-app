@@ -63,7 +63,7 @@ export function AppSidebar({
             icon: <HugeiconsIcon icon={DiningTableIcon} strokeWidth={2} />,
           },
           {
-            title: "Makanan",
+            title: "Menu",
             url: "/dashboard/foods",
             icon: <HugeiconsIcon icon={MenuRestaurantIcon} strokeWidth={2} />,
           },
