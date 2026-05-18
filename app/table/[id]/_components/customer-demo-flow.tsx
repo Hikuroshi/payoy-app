@@ -61,8 +61,8 @@ export function CustomerDemoBanner({ className, returnHref }: { className?: stri
     <div className={cn("bg-primary text-primary-foreground py-1", className)}>
       <div className="mx-auto flex w-full items-center justify-center px-4 sm:px-5 md:px-6">
         <p className="text-xs">Mode demo pelanggan.</p>
-        <Button asChild size="xs" variant="link" className="text-primary-foreground">
-          <Link href={returnHref ?? returnTo}>Klik untuk kembali.</Link>
+        <Button asChild size="xs" variant="link" className="text-primary-foreground underline md:hover:font-bold">
+          <Link href={returnHref ?? returnTo}>Klik untuk keluar dari demo.</Link>
         </Button>
       </div>
     </div>
