@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 
@@ -12,6 +14,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { formatPrice, type CustomerCartItem } from "./customer-cart";
+import { CustomerDemoBanner, useCustomerDemoFlow } from "./customer-demo-flow";
 
 function getInitials(value: string) {
   return value
@@ -27,6 +30,7 @@ export function CustomerPageShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col gap-4 px-4 py-4 pb-10 sm:px-5 md:px-6">
+        <CustomerDemoBanner className="-mx-4 -mt-4 sm:-mx-5 md:-mx-6" />
         {children}
       </div>
     </main>
@@ -44,6 +48,8 @@ export function CustomerPageHeader({
   tableNumber: string;
   title: string;
 }) {
+  const { buildHref } = useCustomerDemoFlow();
+
   return (
     <header className="flex items-start justify-between gap-3">
       <div className="min-w-0">
@@ -62,7 +68,7 @@ export function CustomerPageHeader({
         </p>
         {backHref ? (
           <Button asChild size="sm" variant="outline">
-            <Link href={backHref}>Kembali</Link>
+            <Link href={buildHref(backHref)}>Kembali</Link>
           </Button>
         ) : null}
       </div>
@@ -113,6 +119,8 @@ export function EmptyCustomerState({
   label: string;
   title: string;
 }) {
+  const { buildHref } = useCustomerDemoFlow();
+
   return (
     <Card>
       <CardHeader className="items-center text-center">
@@ -121,7 +129,7 @@ export function EmptyCustomerState({
       </CardHeader>
       <CardContent className="flex justify-center">
         <Button asChild>
-          <Link href={href}>{label}</Link>
+          <Link href={buildHref(href)}>{label}</Link>
         </Button>
       </CardContent>
     </Card>

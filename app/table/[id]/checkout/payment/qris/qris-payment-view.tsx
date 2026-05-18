@@ -13,6 +13,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { clearCart, createOrderSnapshot, formatDateTime, formatPrice, saveOrder } from "../../../_components/customer-cart";
+import { useCustomerDemoFlow } from "../../../_components/customer-demo-flow";
 import { CustomerPageHeader, CustomerPageShell, EmptyCustomerState } from "../../../_components/customer-order-ui";
 import { createCustomerOrder, markCustomerOrderPaid } from "../../../_components/order-actions";
 import { useCartItems, useLatestOrder } from "../../../_components/customer-store-hooks";
@@ -34,6 +35,7 @@ export function QrisPaymentView({ tableId, tableNumber }: QrisPaymentViewProps) 
   const router = useRouter();
   const items = useCartItems(tableId);
   const order = useLatestOrder(tableId);
+  const { buildHref } = useCustomerDemoFlow();
   const [isPending, startTransition] = React.useTransition();
 
   React.useEffect(() => {
@@ -102,7 +104,7 @@ export function QrisPaymentView({ tableId, tableNumber }: QrisPaymentViewProps) 
       });
       clearCart(tableId);
 
-      router.push(`/table/${tableId}/status-payment`);
+      router.push(buildHref(`/table/${tableId}/status-payment`));
     });
   }
 
@@ -155,7 +157,7 @@ export function QrisPaymentView({ tableId, tableNumber }: QrisPaymentViewProps) 
               </Button>
             ) : null}
             <Button asChild variant="outline">
-              <Link href={`/table/${tableId}/checkout`}>Ganti metode pembayaran</Link>
+              <Link href={buildHref(`/table/${tableId}/checkout`)}>Ganti metode pembayaran</Link>
             </Button>
           </div>
         </CardContent>

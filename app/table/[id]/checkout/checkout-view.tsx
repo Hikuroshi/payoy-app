@@ -15,6 +15,7 @@ import { paymentMethods, type PaymentMethod } from "@/lib/order";
 import { cn } from "@/lib/utils";
 
 import { getCartTotals, getTotalQuantity, saveOrder } from "../_components/customer-cart";
+import { useCustomerDemoFlow } from "../_components/customer-demo-flow";
 import { CustomerPageHeader, CustomerPageShell, EmptyCustomerState, OrderItemRow, OrderTotals } from "../_components/customer-order-ui";
 import { createCustomerOrder } from "../_components/order-actions";
 import { useCartItems } from "../_components/customer-store-hooks";
@@ -37,6 +38,7 @@ type CheckoutViewProps = {
 export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
   const router = useRouter();
   const items = useCartItems(tableId);
+  const { buildHref } = useCustomerDemoFlow();
   const paymentTriggerRef = React.useRef<HTMLButtonElement | null>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [method, setMethod] = React.useState<PaymentMethod | null>(null);
@@ -78,7 +80,7 @@ export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
 
       saveOrder(result.order);
 
-      router.push(`/table/${tableId}/checkout/payment/qris`);
+      router.push(buildHref(`/table/${tableId}/checkout/payment/qris`));
     });
   }
 
@@ -191,7 +193,7 @@ export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
               )}
             </Button>
             <Button asChild variant="outline">
-              <Link href={`/table/${tableId}/cart`}>Ubah keranjang</Link>
+              <Link href={buildHref(`/table/${tableId}/cart`)}>Ubah keranjang</Link>
             </Button>
           </CardContent>
         </Card>

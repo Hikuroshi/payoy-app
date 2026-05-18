@@ -139,8 +139,7 @@ export default async function MenuPage({ params, searchParams }: MenuPageProps) 
         tableNumber={table.number}
       />
       <TableDrawer
-        closeHref={demoReturnTo}
-        showCloseButton={Boolean(demoReturnTo)}
+        demoReturnTo={demoReturnTo}
         tableNumber={table.number}
       />
     </main>

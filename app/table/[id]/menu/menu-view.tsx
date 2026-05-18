@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import { addCartItem, formatPrice, getCartTotals, getTotalQuantity, type CustomerCartItem } from "../_components/customer-cart";
+import { CustomerDemoBanner, useCustomerDemoFlow } from "../_components/customer-demo-flow";
 import { useCartItems } from "../_components/customer-store-hooks";
 
 export type PublicMenuFood = {
@@ -31,6 +32,8 @@ export type PublicMenuCategory = {
   imageUrl: string;
   name: string;
 };
+
+const ABOVE_FOLD_MENU_IMAGE_COUNT = 9;
 
 type CartOptimisticAction = {
   item: PublicMenuFood;
@@ -162,12 +165,12 @@ function CategoryFilterScroller({ categories, selectedCategoryId }: { categories
   return (
     <div className="-mx-4 overflow-x-auto px-4 pb-1 sm:-mx-5 sm:px-5 md:-mx-6 md:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex min-w-max items-start gap-4">
-        {categories.map((category, index) => {
+        {categories.map((category) => {
           const isActive = selectedCategoryId === category.id;
 
           return (
             <button aria-pressed={isActive} className="flex w-20 shrink-0 flex-col items-center gap-2 text-center" key={category.id} onClick={() => handleSelect(category.id)} type="button">
-              <div className={cn("relative size-16 overflow-hidden rounded-full border-2 border-transparent bg-muted transition-all", isActive ? "border-primary ring-2 ring-primary/20" : "border-border/60")}>{category.imageUrl ? <Image alt={category.name} className="object-cover" fill loading={index < 4 ? "eager" : "lazy"} sizes="64px" src={category.imageUrl} unoptimized /> : <MenuImagePlaceholder className="size-full rounded-full text-sm" name={category.name} />}</div>
+              <div className={cn("relative size-16 overflow-hidden rounded-full border-2 border-transparent bg-muted transition-all", isActive ? "border-primary ring-2 ring-primary/20" : "border-border/60")}>{category.imageUrl ? <Image alt={category.name} className="object-cover" fill loading="eager" sizes="64px" src={category.imageUrl} unoptimized /> : <MenuImagePlaceholder className="size-full rounded-full text-sm" name={category.name} />}</div>
               <span className={cn("line-clamp-2 text-xs leading-tight text-muted-foreground", isActive && "font-semibold text-foreground")}>{category.name}</span>
             </button>
           );
@@ -228,6 +231,8 @@ function MenuDetailDrawer({ item, onAdd, onOpenChange }: { item: PublicMenuFood 
 }
 
 function CheckoutBar({ count, href, total }: { count: number; href: string; total: number }) {
+  const { buildHref } = useCustomerDemoFlow();
+
   return (
     <div className="fixed inset-x-0 bottom-0 border-t bg-background/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-4 py-3 sm:px-5 md:px-6">
@@ -238,7 +243,7 @@ function CheckoutBar({ count, href, total }: { count: number; href: string; tota
 
         {count > 0 ? (
           <Button asChild size="sm" className="w-full">
-            <Link href={href}>Checkout</Link>
+            <Link href={buildHref(href)}>Checkout</Link>
           </Button>
         ) : (
           <Button type="button" size="sm" className="w-full" disabled>
@@ -273,6 +278,7 @@ export function MenuView({ categories, errorMessage, foods, query, selectedCateg
   return (
     <div className="relative">
       <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col bg-background px-4 pb-28 pt-4 sm:px-5 md:px-6">
+        <CustomerDemoBanner className="-mx-4 -mt-4 mb-1 sm:-mx-5 md:-mx-6" />
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-2xl font-extrabold leading-tight tracking-normal sm:text-3xl">Menu</h1>
@@ -304,7 +310,7 @@ export function MenuView({ categories, errorMessage, foods, query, selectedCateg
             {foods.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                 {foods.map((item, index) => (
-                  <MenuItemCard imageLoading={index < 3 ? "eager" : "lazy"} key={item.id} item={item} onAdd={handleAddItem} onSelect={setSelectedItem} />
+                  <MenuItemCard imageLoading={index < ABOVE_FOLD_MENU_IMAGE_COUNT ? "eager" : "lazy"} key={item.id} item={item} onAdd={handleAddItem} onSelect={setSelectedItem} />
                 ))}
               </div>
             ) : (

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 
 import { clearCart, formatPrice, getCartTotals, getTotalQuantity, setCartItems, type CustomerCartItem } from "../_components/customer-cart";
+import { useCustomerDemoFlow } from "../_components/customer-demo-flow";
 import { CustomerItemImage, CustomerPageHeader, CustomerPageShell, EmptyCustomerState, OrderTotals } from "../_components/customer-order-ui";
 import { useCartItems } from "../_components/customer-store-hooks";
 
@@ -37,6 +38,7 @@ function reduceCartItems(currentItems: CustomerCartItem[], action: CartOptimisti
 
 export function CartView({ tableId, tableNumber }: CartViewProps) {
   const items = useCartItems(tableId);
+  const { buildHref } = useCustomerDemoFlow();
   const [optimisticItems, applyOptimisticItems] = React.useOptimistic(items, reduceCartItems);
 
   function syncItems(nextItems: CustomerCartItem[]) {
@@ -148,7 +150,7 @@ export function CartView({ tableId, tableNumber }: CartViewProps) {
           <CardContent className="flex flex-col gap-2">
             <OrderTotals {...totals} />
             <Button asChild>
-              <Link href={`/table/${tableId}/checkout`}>Checkout</Link>
+              <Link href={buildHref(`/table/${tableId}/checkout`)}>Checkout</Link>
             </Button>
             <Button onClick={handleClearCart} type="button" variant="outline">
               Kosongkan

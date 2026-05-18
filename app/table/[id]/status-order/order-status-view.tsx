@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import StepProgress from "@/components/ui/stepper";
 
 import { formatDateTime, formatPrice, type CustomerOrderStatus } from "../_components/customer-cart";
+import { useCustomerDemoFlow } from "../_components/customer-demo-flow";
 import { CustomerPageHeader, CustomerPageShell, EmptyCustomerState, OrderItemRow } from "../_components/customer-order-ui";
 import { useSyncedLatestOrder } from "../_components/customer-store-hooks";
 
@@ -90,6 +91,7 @@ function OrderLifecycleCard({ children, status }: { children: React.ReactNode; s
 
 export function OrderStatusView({ tableId, tableNumber }: OrderStatusViewProps) {
   const order = useSyncedLatestOrder(tableId);
+  const { buildHref } = useCustomerDemoFlow();
 
   if (!order) {
     return (
@@ -141,7 +143,7 @@ export function OrderStatusView({ tableId, tableNumber }: OrderStatusViewProps) 
               <OrderItemRow item={item} key={item.id} imageLoading="eager" />
             ))}
             <Button asChild className="mt-2">
-              <Link href={`/table/${tableId}/menu`}>Kembali ke menu</Link>
+              <Link href={buildHref(`/table/${tableId}/menu`)}>Kembali ke menu</Link>
             </Button>
           </CardContent>
         </Card>
