@@ -261,7 +261,6 @@ export function MenuView({ categories, errorMessage, foods, query, selectedCateg
   const [optimisticCartItems, applyOptimisticCart] = React.useOptimistic(cartItems, reduceCartItems);
   const cartTotals = getCartTotals(optimisticCartItems);
   const cartCount = getTotalQuantity(optimisticCartItems);
-  const router = useRouter();
 
   function handleAddItem(item: PublicMenuFood) {
     React.startTransition(() => {
@@ -282,23 +281,11 @@ export function MenuView({ categories, errorMessage, foods, query, selectedCateg
         <CustomerDemoBanner className="-mx-4 -mt-4 mb-1 sm:-mx-5 md:-mx-6" />
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-2xl font-extrabold leading-tight tracking-normal sm:text-3xl">
-              Menu
-            </h1>
-            {errorMessage ? (
-              <p className="mt-1.5 max-w-xl text-xs text-muted-foreground sm:text-sm">
-                {errorMessage}
-              </p>
-            ) : null}
+            <h1 className="text-2xl font-extrabold leading-tight tracking-normal sm:text-3xl">Menu</h1>
+            {errorMessage ? <p className="mt-1.5 max-w-xl text-xs text-muted-foreground sm:text-sm">{errorMessage}</p> : null}
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2">
-            <p className="pt-1 text-sm font-extrabold text-muted-foreground sm:text-base">
-              Meja #{tableNumber}
-            </p>
-
-            <Button size="sm" variant="outline" onClick={() => router.back()}>
-              Kembali
-            </Button>
+            <p className="pt-1 text-sm font-extrabold text-muted-foreground sm:text-base">Meja #{tableNumber}</p>
           </div>
         </header>
 
