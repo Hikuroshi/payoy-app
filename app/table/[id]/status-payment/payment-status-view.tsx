@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { formatPrice } from "../_components/customer-cart";
+import { useCustomerDemoFlow } from "../_components/customer-demo-flow";
 import { CustomerPageHeader, CustomerPageShell, EmptyCustomerState } from "../_components/customer-order-ui";
 import { useSyncedLatestOrder } from "../_components/customer-store-hooks";
 
@@ -19,6 +20,7 @@ type PaymentStatusViewProps = {
 
 export function PaymentStatusView({ tableId, tableNumber }: PaymentStatusViewProps) {
   const order = useSyncedLatestOrder(tableId);
+  const { buildHref } = useCustomerDemoFlow();
 
   function handleDownloadReceipt() {
     toast.success("Struk siap disimpan", {
@@ -54,7 +56,7 @@ export function PaymentStatusView({ tableId, tableNumber }: PaymentStatusViewPro
           </Button>
 
           <Button asChild>
-            <Link href={`/table/${tableId}/status-order`}>Pantau pesanan</Link>
+            <Link href={buildHref(`/table/${tableId}/status-order`)}>Pantau pesanan</Link>
           </Button>
         </CardContent>
       </Card>

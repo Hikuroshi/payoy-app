@@ -7,20 +7,12 @@ const orderLimits = {
   quantity: 99,
 } as const;
 
-const noteField = z
-  .string()
-  .trim()
-  .max(orderLimits.note, `Catatan maksimal ${orderLimits.note} karakter.`)
-  .optional();
+const noteField = z.string().trim().max(orderLimits.note, `Catatan maksimal ${orderLimits.note} karakter.`).optional();
 
-const orderQuantityField = z
-  .number()
-  .int("Jumlah item tidak valid.")
-  .min(1, "Jumlah item minimal 1.")
-  .max(orderLimits.quantity, `Jumlah item maksimal ${orderLimits.quantity}.`);
+const orderQuantityField = z.number().int("Jumlah item tidak valid.").min(1, "Jumlah item minimal 1.").max(orderLimits.quantity, `Jumlah item maksimal ${orderLimits.quantity}.`);
 
 export const orderItemSchema = z.object({
-  id: z.uuid("Makanan tidak valid."),
+  id: z.uuid("Menu tidak valid."),
   note: noteField,
   quantity: orderQuantityField,
 });

@@ -30,33 +30,23 @@ type FoodRow = {
   created_at: string;
 };
 
-function getPublicImageUrl(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  path: string | null
-) {
+function getPublicImageUrl(supabase: Awaited<ReturnType<typeof createClient>>, path: string | null) {
   if (!path) {
     return "";
   }
 
-  return supabase.storage.from(menuImageBucket).getPublicUrl(path).data
-    .publicUrl;
+  return supabase.storage.from(menuImageBucket).getPublicUrl(path).data.publicUrl;
 }
 
 export async function getOwnerFoods(
   ownerId: string,
-  query?: string
+  query?: string,
 ): Promise<{
   error?: string;
   foods: Food[];
 }> {
   const supabase = await createClient();
-  let request = supabase
-    .from("foods")
-    .select(
-      "id, name, description, image_path, price, is_available, created_at, category_id, category:food_categories!foods_category_id_fkey(name)"
-    )
-    .eq("owner_id", ownerId)
-    .order("name", { ascending: true });
+  let request = supabase.from("foods").select("id, name, description, image_path, price, is_available, created_at, category_id, category:food_categories!foods_category_id_fkey(name)").eq("owner_id", ownerId).order("name", { ascending: true });
 
   if (query) {
     request = request.ilike("name", toSupabaseLikePattern(query));
@@ -65,7 +55,7 @@ export async function getOwnerFoods(
   const { data, error } = await request.returns<FoodRow[]>();
 
   if (error) {
-    return { foods: [], error: "Makanan gagal dimuat." };
+    return { foods: [], error: "Menu gagal dimuat." };
   }
 
   return {
@@ -86,27 +76,20 @@ export async function getOwnerFoods(
 
 export async function getOwnerFood(
   ownerId: string,
-  id: string
+  id: string,
 ): Promise<{
   error?: string;
   food?: Food;
 }> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("foods")
-    .select(
-      "id, name, description, image_path, price, is_available, created_at, category_id, category:food_categories!foods_category_id_fkey(name)"
-    )
-    .eq("id", id)
-    .eq("owner_id", ownerId)
-    .maybeSingle<FoodRow>();
+  const { data, error } = await supabase.from("foods").select("id, name, description, image_path, price, is_available, created_at, category_id, category:food_categories!foods_category_id_fkey(name)").eq("id", id).eq("owner_id", ownerId).maybeSingle<FoodRow>();
 
   if (error) {
-    return { error: "Makanan gagal dimuat." };
+    return { error: "Menu gagal dimuat." };
   }
 
   if (!data) {
-    return { error: "Makanan tidak ditemukan." };
+    return { error: "Menu tidak ditemukan." };
   }
 
   return {

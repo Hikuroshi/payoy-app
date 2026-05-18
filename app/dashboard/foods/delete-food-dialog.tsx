@@ -2,16 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -40,11 +31,7 @@ function DeleteSubmitButton() {
   );
 }
 
-export function DeleteFoodDialog({
-  action = deleteFood,
-  id,
-  name,
-}: DeleteFoodDialogProps) {
+export function DeleteFoodDialog({ action = deleteFood, id, name }: DeleteFoodDialogProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -54,10 +41,8 @@ export function DeleteFoodDialog({
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Hapus makanan?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {name} akan dihapus dari menu makanan.
-          </AlertDialogDescription>
+          <AlertDialogTitle>Hapus menu?</AlertDialogTitle>
+          <AlertDialogDescription>{name} akan dihapus dari menu menu.</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Batal</AlertDialogCancel>

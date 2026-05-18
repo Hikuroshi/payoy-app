@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import { addCartItem, formatPrice, getCartTotals, getTotalQuantity, type CustomerCartItem } from "../_components/customer-cart";
+import { CustomerDemoBanner, useCustomerDemoFlow } from "../_components/customer-demo-flow";
 import { useCartItems } from "../_components/customer-store-hooks";
 
 export type PublicMenuFood = {
@@ -31,6 +32,8 @@ export type PublicMenuCategory = {
   imageUrl: string;
   name: string;
 };
+
+const ABOVE_FOLD_MENU_IMAGE_COUNT = 9;
 
 type CartOptimisticAction = {
   item: PublicMenuFood;
@@ -131,32 +134,29 @@ function MenuItemCard({ imageLoading = "lazy", item, onAdd, onSelect }: { imageL
   );
 }
 
-function CategoryFilterScroller({
-  categories,
-  selectedCategoryId,
-}: {
-  categories: PublicMenuCategory[];
-  selectedCategoryId?: string;
-}) {
+function CategoryFilterScroller({ categories, selectedCategoryId }: { categories: PublicMenuCategory[]; selectedCategoryId?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const handleSelect = React.useCallback((categoryId: string) => {
-    const nextParams = new URLSearchParams(searchParams.toString());
+  const handleSelect = React.useCallback(
+    (categoryId: string) => {
+      const nextParams = new URLSearchParams(searchParams.toString());
 
-    if (selectedCategoryId === categoryId) {
-      nextParams.delete("category");
-    } else {
-      nextParams.set("category", categoryId);
-    }
+      if (selectedCategoryId === categoryId) {
+        nextParams.delete("category");
+      } else {
+        nextParams.set("category", categoryId);
+      }
 
-    const nextSearch = nextParams.toString();
+      const nextSearch = nextParams.toString();
 
-    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, {
-      scroll: false,
-    });
-  }, [pathname, router, searchParams, selectedCategoryId]);
+      router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, {
+        scroll: false,
+      });
+    },
+    [pathname, router, searchParams, selectedCategoryId],
+  );
 
   if (categories.length === 0) {
     return null;
@@ -165,35 +165,13 @@ function CategoryFilterScroller({
   return (
     <div className="-mx-4 overflow-x-auto px-4 pb-1 sm:-mx-5 sm:px-5 md:-mx-6 md:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex min-w-max items-start gap-4">
-        {categories.map((category, index) => {
+        {categories.map((category) => {
           const isActive = selectedCategoryId === category.id;
 
           return (
-            <button
-              aria-pressed={isActive}
-              className="flex w-20 shrink-0 flex-col items-center gap-2 text-center"
-              key={category.id}
-              onClick={() => handleSelect(category.id)}
-              type="button"
-            >
-              <div className={cn("relative size-16 overflow-hidden rounded-full border-2 border-transparent bg-muted transition-all", isActive ? "border-primary ring-2 ring-primary/20" : "border-border/60")}>
-                {category.imageUrl ? (
-                  <Image
-                    alt={category.name}
-                    className="object-cover"
-                    fill
-                    loading={index < 4 ? "eager" : "lazy"}
-                    sizes="64px"
-                    src={category.imageUrl}
-                    unoptimized
-                  />
-                ) : (
-                  <MenuImagePlaceholder className="size-full rounded-full text-sm" name={category.name} />
-                )}
-              </div>
-              <span className={cn("line-clamp-2 text-xs leading-tight text-muted-foreground", isActive && "font-semibold text-foreground")}>
-                {category.name}
-              </span>
+            <button aria-pressed={isActive} className="flex w-20 shrink-0 flex-col items-center gap-2 text-center" key={category.id} onClick={() => handleSelect(category.id)} type="button">
+              <div className={cn("relative size-16 overflow-hidden rounded-full border-2 border-transparent bg-muted transition-all", isActive ? "border-primary ring-2 ring-primary/20" : "border-border/60")}>{category.imageUrl ? <Image alt={category.name} className="object-cover" fill loading="eager" sizes="64px" src={category.imageUrl} unoptimized /> : <MenuImagePlaceholder className="size-full rounded-full text-sm" name={category.name} />}</div>
+              <span className={cn("line-clamp-2 text-xs leading-tight text-muted-foreground", isActive && "font-semibold text-foreground")}>{category.name}</span>
             </button>
           );
         })}
@@ -253,6 +231,8 @@ function MenuDetailDrawer({ item, onAdd, onOpenChange }: { item: PublicMenuFood 
 }
 
 function CheckoutBar({ count, href, total }: { count: number; href: string; total: number }) {
+  const { buildHref } = useCustomerDemoFlow();
+
   return (
     <div className="fixed inset-x-0 bottom-0 border-t bg-background/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-4 py-3 sm:px-5 md:px-6">
@@ -263,7 +243,7 @@ function CheckoutBar({ count, href, total }: { count: number; href: string; tota
 
         {count > 0 ? (
           <Button asChild size="sm" className="w-full">
-            <Link href={href}>Checkout</Link>
+            <Link href={buildHref(href)}>Checkout</Link>
           </Button>
         ) : (
           <Button type="button" size="sm" className="w-full" disabled>
@@ -275,25 +255,7 @@ function CheckoutBar({ count, href, total }: { count: number; href: string; tota
   );
 }
 
-export function MenuView({
-  categories,
-  errorMessage,
-  foods,
-  query,
-  selectedCategoryId,
-  selectedCategoryName,
-  tableId,
-  tableNumber,
-}: {
-  categories: PublicMenuCategory[];
-  errorMessage?: string;
-  foods: PublicMenuFood[];
-  query?: string;
-  selectedCategoryId?: string;
-  selectedCategoryName?: string;
-  tableId: string;
-  tableNumber: string;
-}) {
+export function MenuView({ categories, errorMessage, foods, query, selectedCategoryId, selectedCategoryName, tableId, tableNumber }: { categories: PublicMenuCategory[]; errorMessage?: string; foods: PublicMenuFood[]; query?: string; selectedCategoryId?: string; selectedCategoryName?: string; tableId: string; tableNumber: string }) {
   const cartItems = useCartItems(tableId);
   const [selectedItem, setSelectedItem] = React.useState<PublicMenuFood | null>(null);
   const [optimisticCartItems, applyOptimisticCart] = React.useOptimistic(cartItems, reduceCartItems);
@@ -317,6 +279,7 @@ export function MenuView({
   return (
     <div className="relative">
       <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col bg-background px-4 pb-28 pt-4 sm:px-5 md:px-6">
+        <CustomerDemoBanner className="-mx-4 -mt-4 mb-1 sm:-mx-5 md:-mx-6" />
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-2xl font-extrabold leading-tight tracking-normal sm:text-3xl">
@@ -341,7 +304,7 @@ export function MenuView({
 
         <section className="mt-5">
           <React.Suspense fallback={null}>
-            <UrlSearchInput className="mb-3.5" clearKeysOnChange={["category"]} placeholder="Cari menu makanan..." />
+            <UrlSearchInput className="mb-3.5" clearKeysOnChange={["category"]} placeholder="Cari menu..." />
           </React.Suspense>
 
           {categories.length > 0 ? (
@@ -353,16 +316,14 @@ export function MenuView({
           ) : null}
 
           <div className="flex items-end justify-between gap-3">
-            <h2 className="min-w-0 truncate text-xl font-extrabold leading-tight tracking-normal sm:text-2xl">
-              {query ? "Hasil pencarian" : selectedCategoryName ?? "Menu Makanan"}
-            </h2>
+            <h2 className="min-w-0 truncate text-xl font-extrabold leading-tight tracking-normal sm:text-2xl">{query ? "Hasil pencarian" : (selectedCategoryName ?? "Menu")}</h2>
           </div>
 
           <div className="mt-3.5">
             {foods.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                 {foods.map((item, index) => (
-                  <MenuItemCard imageLoading={index < 3 ? "eager" : "lazy"} key={item.id} item={item} onAdd={handleAddItem} onSelect={setSelectedItem} />
+                  <MenuItemCard imageLoading={index < ABOVE_FOLD_MENU_IMAGE_COUNT ? "eager" : "lazy"} key={item.id} item={item} onAdd={handleAddItem} onSelect={setSelectedItem} />
                 ))}
               </div>
             ) : (

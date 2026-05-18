@@ -8,20 +8,9 @@ const foodLimits = {
   price: 999_999_999,
 } as const;
 
-const foodNameField = z
-  .string()
-  .trim()
-  .min(2, "Nama makanan minimal 2 karakter.")
-  .max(foodLimits.name, `Nama makanan maksimal ${foodLimits.name} karakter.`);
+const foodNameField = z.string().trim().min(2, "Nama menu minimal 2 karakter.").max(foodLimits.name, `Nama menu maksimal ${foodLimits.name} karakter.`);
 
-const foodDescriptionField = z
-  .string()
-  .trim()
-  .max(
-    foodLimits.description,
-    `Deskripsi maksimal ${foodLimits.description} karakter.`
-  )
-  .optional();
+const foodDescriptionField = z.string().trim().max(foodLimits.description, `Deskripsi maksimal ${foodLimits.description} karakter.`).optional();
 
 const priceField = z
   .string()
@@ -31,19 +20,10 @@ const priceField = z
   .transform((value) => Number(value))
   .refine((value) => Number.isSafeInteger(value), "Harga tidak valid.")
   .refine((value) => value >= 0, "Harga tidak valid.")
-  .refine(
-    (value) => value <= foodLimits.price,
-    "Harga maksimal Rp999.999.999."
-  );
+  .refine((value) => value <= foodLimits.price, "Harga maksimal Rp999.999.999.");
 
 export const foodSchema = z.object({
-  categoryId: z
-    .union([
-      z.literal(""),
-      z.literal("__none"),
-      z.uuid("Kategori tidak valid."),
-    ])
-    .transform((value) => (value === "" || value === "__none" ? null : value)),
+  categoryId: z.union([z.literal(""), z.literal("__none"), z.uuid("Kategori tidak valid.")]).transform((value) => (value === "" || value === "__none" ? null : value)),
   name: foodNameField,
   description: foodDescriptionField,
   price: priceField,
@@ -51,20 +31,14 @@ export const foodSchema = z.object({
 });
 
 export const updateFoodSchema = foodSchema.extend({
-  id: z.uuid("Makanan tidak valid."),
+  id: z.uuid("Menu tidak valid."),
 });
 
 export const deleteFoodSchema = z.object({
-  id: z.uuid("Makanan tidak valid."),
+  id: z.uuid("Menu tidak valid."),
 });
 
-type FoodFormFields =
-  | "category_id"
-  | "name"
-  | "description"
-  | "price"
-  | "image"
-  | "is_available";
+type FoodFormFields = "category_id" | "name" | "description" | "price" | "image" | "is_available";
 
 export type FoodFormValues = {
   category_id: string;

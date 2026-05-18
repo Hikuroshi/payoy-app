@@ -34,7 +34,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
             <Field data-invalid={!!passwordError}>
               <div className="flex items-center gap-2">
                 <FieldLabel htmlFor="login-password">Password</FieldLabel>
-                <Link href="#" className="ml-auto text-xs underline-offset-4 hover:underline">
+                <Link href="/forgot-password" className="ml-auto text-xs underline-offset-4 hover:underline">
                   Lupa password?
                 </Link>
               </div>

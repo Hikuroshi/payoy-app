@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 
 import { clearCart, formatPrice, getCartTotals, getTotalQuantity, setCartItems, type CustomerCartItem } from "../_components/customer-cart";
+import { useCustomerDemoFlow } from "../_components/customer-demo-flow";
 import { CustomerItemImage, CustomerPageHeader, CustomerPageShell, EmptyCustomerState, OrderTotals } from "../_components/customer-order-ui";
 import { useCartItems } from "../_components/customer-store-hooks";
 
@@ -17,16 +18,9 @@ type CartViewProps = {
   tableNumber: string;
 };
 
-type CartOptimisticAction =
-  | { id: string; quantity: number; type: "set_quantity" }
-  | { id: string; note: string; type: "set_note" }
-  | { id: string; type: "remove" }
-  | { type: "clear" };
+type CartOptimisticAction = { id: string; quantity: number; type: "set_quantity" } | { id: string; note: string; type: "set_note" } | { id: string; type: "remove" } | { type: "clear" };
 
-function reduceCartItems(
-  currentItems: CustomerCartItem[],
-  action: CartOptimisticAction
-) {
+function reduceCartItems(currentItems: CustomerCartItem[], action: CartOptimisticAction) {
   if (action.type === "clear") {
     return [];
   }
@@ -36,26 +30,16 @@ function reduceCartItems(
   }
 
   if (action.type === "set_note") {
-    return currentItems.map((item) =>
-      item.id === action.id ? { ...item, note: action.note } : item
-    );
+    return currentItems.map((item) => (item.id === action.id ? { ...item, note: action.note } : item));
   }
 
-  return currentItems
-    .map((item) =>
-      item.id === action.id
-        ? { ...item, quantity: Math.max(0, action.quantity) }
-        : item
-    )
-    .filter((item) => item.quantity > 0);
+  return currentItems.map((item) => (item.id === action.id ? { ...item, quantity: Math.max(0, action.quantity) } : item)).filter((item) => item.quantity > 0);
 }
 
 export function CartView({ tableId, tableNumber }: CartViewProps) {
   const items = useCartItems(tableId);
-  const [optimisticItems, applyOptimisticItems] = React.useOptimistic(
-    items,
-    reduceCartItems
-  );
+  const { buildHref } = useCustomerDemoFlow();
+  const [optimisticItems, applyOptimisticItems] = React.useOptimistic(items, reduceCartItems);
 
   function syncItems(nextItems: CustomerCartItem[]) {
     setCartItems(tableId, nextItems);
@@ -108,7 +92,7 @@ export function CartView({ tableId, tableNumber }: CartViewProps) {
   if (!optimisticItems.length) {
     return (
       <CustomerPageShell>
-        <CustomerPageHeader backHref={`/table/${tableId}/menu`} description="Tambahkan makanan dari halaman menu terlebih dahulu." tableNumber={tableNumber} title="Keranjang" />
+        <CustomerPageHeader backHref={`/table/${tableId}/menu`} description="Tambahkan menu dari halaman menu terlebih dahulu." tableNumber={tableNumber} title="Keranjang" />
         <EmptyCustomerState description="Belum ada item di keranjang meja ini." href={`/table/${tableId}/menu`} label="Lihat menu" title="Keranjang kosong" />
       </CustomerPageShell>
     );
@@ -129,11 +113,7 @@ export function CartView({ tableId, tableNumber }: CartViewProps) {
             {optimisticItems.map((item, index) => (
               <div className="flex flex-col gap-3 rounded-md border p-3" key={item.id}>
                 <div className="flex gap-3">
-                  <CustomerItemImage
-                    alt={item.name}
-                    loading={index < 2 ? "eager" : "lazy"}
-                    src={item.imageUrl}
-                  />
+                  <CustomerItemImage alt={item.name} loading={index < 2 ? "eager" : "lazy"} src={item.imageUrl} />
                   <div className="flex min-w-0 flex-1 flex-col gap-2">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -170,7 +150,7 @@ export function CartView({ tableId, tableNumber }: CartViewProps) {
           <CardContent className="flex flex-col gap-2">
             <OrderTotals {...totals} />
             <Button asChild>
-              <Link href={`/table/${tableId}/checkout`}>Checkout</Link>
+              <Link href={buildHref(`/table/${tableId}/checkout`)}>Checkout</Link>
             </Button>
             <Button onClick={handleClearCart} type="button" variant="outline">
               Kosongkan

@@ -6,24 +6,19 @@ import { createFood } from "../actions";
 import { FoodForm } from "./food-form";
 
 export const metadata = {
-  title: "Tambah Makanan",
+  title: "Tambah Menu",
 };
 
 type CreateFoodPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-function getParamValue(
-  searchParams: Record<string, string | string[] | undefined>,
-  key: string
-) {
+function getParamValue(searchParams: Record<string, string | string[] | undefined>, key: string) {
   const value = searchParams[key];
   return typeof value === "string" ? value : undefined;
 }
 
-export default async function CreateFoodPage({
-  searchParams,
-}: CreateFoodPageProps) {
+export default async function CreateFoodPage({ searchParams }: CreateFoodPageProps) {
   const owner = await requireOwnerProfile();
 
   const resolvedSearchParams = await searchParams;

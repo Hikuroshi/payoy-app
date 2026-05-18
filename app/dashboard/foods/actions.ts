@@ -8,13 +8,7 @@ import { redirect } from "next/navigation";
 import { createSubmissionId } from "@/lib/action-form";
 import { requireOwnerProfile } from "@/lib/auth/profile";
 import { createClient } from "@/lib/server";
-import {
-  deleteFoodSchema,
-  foodSchema,
-  type FoodFormState,
-  type FoodFormValues,
-  updateFoodSchema,
-} from "./schema";
+import { deleteFoodSchema, foodSchema, type FoodFormState, type FoodFormValues, updateFoodSchema } from "./schema";
 
 const foodsPath = "/dashboard/foods";
 const menuImageBucket = "menu_image";
@@ -70,21 +64,12 @@ async function uploadFoodImage(supabase: Awaited<ReturnType<typeof createClient>
   return { error, path };
 }
 
-async function getOwnerCategoryId(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  ownerId: string,
-  categoryId: string | null
-) {
+async function getOwnerCategoryId(supabase: Awaited<ReturnType<typeof createClient>>, ownerId: string, categoryId: string | null) {
   if (!categoryId) {
     return { categoryId: null };
   }
 
-  const { data, error } = await supabase
-    .from("food_categories")
-    .select("id")
-    .eq("id", categoryId)
-    .eq("owner_id", ownerId)
-    .maybeSingle<{ id: string }>();
+  const { data, error } = await supabase.from("food_categories").select("id").eq("id", categoryId).eq("owner_id", ownerId).maybeSingle<{ id: string }>();
 
   if (error || !data) {
     return { error: "Kategori tidak valid." };
@@ -98,11 +83,7 @@ function redirectWith(type: "success" | "error", message: string, path = foodsPa
   redirect(`${path}?${searchParams.toString()}`);
 }
 
-function createFoodFormState(
-  values: FoodFormValues,
-  message?: string,
-  errors?: FoodFormState["errors"]
-): FoodFormState {
+function createFoodFormState(values: FoodFormValues, message?: string, errors?: FoodFormState["errors"]): FoodFormState {
   return {
     errors,
     message,
@@ -111,9 +92,7 @@ function createFoodFormState(
   };
 }
 
-function mapFoodFieldErrors(
-  errors: Record<string, string[] | undefined>
-): FoodFormState["errors"] {
+function mapFoodFieldErrors(errors: Record<string, string[] | undefined>): FoodFormState["errors"] {
   return {
     category_id: errors.categoryId,
     description: errors.description,
@@ -123,10 +102,7 @@ function mapFoodFieldErrors(
   };
 }
 
-export async function createFood(
-  _state: FoodFormState,
-  formData: FormData
-): Promise<FoodFormState> {
+export async function createFood(_state: FoodFormState, formData: FormData): Promise<FoodFormState> {
   const owner = await requireOwnerProfile();
   const values = {
     category_id: getFormString(formData, "category_id"),
@@ -145,28 +121,20 @@ export async function createFood(
   });
 
   if (!parsed.success) {
-    return createFoodFormState(
-      values,
-      "Periksa kembali data makanan.",
-      mapFoodFieldErrors(parsed.error.flatten().fieldErrors)
-    );
+    return createFoodFormState(values, "Periksa kembali data menu.", mapFoodFieldErrors(parsed.error.flatten().fieldErrors));
   }
 
   if (image.error) {
-    return createFoodFormState(values, "Periksa kembali data makanan.", {
+    return createFoodFormState(values, "Periksa kembali data menu.", {
       image: [image.error],
     });
   }
 
   const supabase = await createClient();
-  const category = await getOwnerCategoryId(
-    supabase,
-    owner.id,
-    parsed.data.categoryId
-  );
+  const category = await getOwnerCategoryId(supabase, owner.id, parsed.data.categoryId);
 
   if (category.error) {
-    return createFoodFormState(values, "Periksa kembali data makanan.", {
+    return createFoodFormState(values, "Periksa kembali data menu.", {
       category_id: [category.error],
     });
   }
@@ -178,8 +146,8 @@ export async function createFood(
     const uploadedImage = await uploadFoodImage(supabase, owner.id, foodId, image.file);
 
     if (uploadedImage.error) {
-      return createFoodFormState(values, "Gambar makanan gagal diupload.", {
-        image: ["Gambar makanan gagal diupload."],
+      return createFoodFormState(values, "Gambar menu gagal diupload.", {
+        image: ["Gambar menu gagal diupload."],
       });
     }
 
@@ -202,17 +170,14 @@ export async function createFood(
       await supabase.storage.from(menuImageBucket).remove([imagePath]);
     }
 
-    return createFoodFormState(values, "Makanan gagal dibuat.");
+    return createFoodFormState(values, "Menu gagal dibuat.");
   }
 
   revalidatePath(foodsPath);
-  redirectWith("success", "Makanan berhasil dibuat.");
+  redirectWith("success", "Menu berhasil dibuat.");
 }
 
-export async function updateFood(
-  _state: FoodFormState,
-  formData: FormData
-): Promise<FoodFormState> {
+export async function updateFood(_state: FoodFormState, formData: FormData): Promise<FoodFormState> {
   const owner = await requireOwnerProfile();
   const values = {
     category_id: getFormString(formData, "category_id"),
@@ -232,28 +197,20 @@ export async function updateFood(
   });
 
   if (!parsed.success) {
-    return createFoodFormState(
-      values,
-      "Periksa kembali data makanan.",
-      mapFoodFieldErrors(parsed.error.flatten().fieldErrors)
-    );
+    return createFoodFormState(values, "Periksa kembali data menu.", mapFoodFieldErrors(parsed.error.flatten().fieldErrors));
   }
 
   if (image.error) {
-    return createFoodFormState(values, "Periksa kembali data makanan.", {
+    return createFoodFormState(values, "Periksa kembali data menu.", {
       image: [image.error],
     });
   }
 
   const supabase = await createClient();
-  const category = await getOwnerCategoryId(
-    supabase,
-    owner.id,
-    parsed.data.categoryId
-  );
+  const category = await getOwnerCategoryId(supabase, owner.id, parsed.data.categoryId);
 
   if (category.error) {
-    return createFoodFormState(values, "Periksa kembali data makanan.", {
+    return createFoodFormState(values, "Periksa kembali data menu.", {
       category_id: [category.error],
     });
   }
@@ -269,8 +226,8 @@ export async function updateFood(
     const uploadedImage = await uploadFoodImage(supabase, owner.id, parsed.data.id, image.file);
 
     if (uploadedImage.error) {
-      return createFoodFormState(values, "Gambar makanan gagal diupload.", {
-        image: ["Gambar makanan gagal diupload."],
+      return createFoodFormState(values, "Gambar menu gagal diupload.", {
+        image: ["Gambar menu gagal diupload."],
       });
     }
 
@@ -296,7 +253,7 @@ export async function updateFood(
       await supabase.storage.from(menuImageBucket).remove([imagePath]);
     }
 
-    return createFoodFormState(values, "Makanan gagal diperbarui.");
+    return createFoodFormState(values, "Menu gagal diperbarui.");
   }
 
   if (imagePath && previousImagePath) {
@@ -305,7 +262,7 @@ export async function updateFood(
 
   revalidatePath(foodsPath);
   revalidatePath("/table/[id]/menu", "page");
-  redirectWith("success", "Makanan berhasil diperbarui.");
+  redirectWith("success", "Menu berhasil diperbarui.");
 }
 
 export async function deleteFood(formData: FormData) {
@@ -315,7 +272,7 @@ export async function deleteFood(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirectWith("error", parsed.error.issues[0]?.message ?? "Makanan tidak valid.");
+    redirectWith("error", parsed.error.issues[0]?.message ?? "Menu tidak valid.");
   }
 
   const supabase = await createClient();
@@ -324,7 +281,7 @@ export async function deleteFood(formData: FormData) {
   const { error } = await supabase.from("foods").delete().eq("id", parsed.data.id).eq("owner_id", owner.id);
 
   if (error) {
-    redirectWith("error", "Makanan gagal dihapus.");
+    redirectWith("error", "Menu gagal dihapus.");
   }
 
   if (food?.image_path) {
@@ -333,5 +290,5 @@ export async function deleteFood(formData: FormData) {
 
   revalidatePath(foodsPath);
   revalidatePath("/table/[id]/menu", "page");
-  redirectWith("success", "Makanan berhasil dihapus.");
+  redirectWith("success", "Menu berhasil dihapus.");
 }

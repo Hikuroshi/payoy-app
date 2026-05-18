@@ -4,14 +4,7 @@ import { Suspense } from "react";
 import { StatusToast } from "@/components/status-toast";
 import { UrlSearchInput } from "@/components/url-search-input";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireOwnerProfile } from "@/lib/auth/profile";
 import { getParamValue, normalizeSearchQuery } from "@/lib/search";
 
@@ -26,18 +19,13 @@ type CategoriesPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function CategoriesPage({
-  searchParams,
-}: CategoriesPageProps) {
+export default async function CategoriesPage({ searchParams }: CategoriesPageProps) {
   const owner = await requireOwnerProfile();
   const resolvedSearchParams = await searchParams;
   const success = getParamValue(resolvedSearchParams, "success");
   const error = getParamValue(resolvedSearchParams, "error");
   const query = normalizeSearchQuery(getParamValue(resolvedSearchParams, "query"));
-  const { categories, error: categoriesError } = await getOwnerCategories(
-    owner.id,
-    query
-  );
+  const { categories, error: categoriesError } = await getOwnerCategories(owner.id, query);
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
@@ -46,9 +34,7 @@ export default async function CategoriesPage({
         <CardHeader>
           <div className="flex flex-col gap-1">
             <CardTitle>Data Kategori</CardTitle>
-            <CardDescription>
-              Kelola {categories.length} kategori untuk mengelompokkan makanan.
-            </CardDescription>
+            <CardDescription>Kelola {categories.length} kategori untuk mengelompokkan menu.</CardDescription>
           </div>
           <CardAction>
             <Button asChild>

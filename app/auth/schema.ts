@@ -56,6 +56,34 @@ export const registerSchema = z
     message: "Konfirmasi password tidak sama.",
   });
 
+const resetRedirectField = z
+  .string()
+  .trim()
+  .url("Link reset password tidak valid.")
+  .refine((value) => {
+    try {
+      const url = new URL(value);
+      return url.pathname === "/auth/callback" && url.searchParams.get("next") === "/reset-password";
+    } catch {
+      return false;
+    }
+  }, "Link reset password tidak valid.");
+
+export const forgotPasswordSchema = z.object({
+  email: emailField,
+  redirectTo: resetRedirectField,
+});
+
+export const resetPasswordSchema = z
+  .object({
+    password: passwordField,
+    confirmPassword: confirmPasswordField,
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Konfirmasi password tidak sama.",
+  });
+
 type AuthFormFields = "name" | "email" | "password" | "confirmPassword";
 
 type AuthFormValues = {
@@ -68,3 +96,31 @@ export type AuthFormState = ActionFormState<AuthFormFields, AuthFormValues> & {
 };
 
 export const initialAuthFormState: AuthFormState = {};
+
+type ForgotPasswordFields = "email";
+
+type ForgotPasswordValues = {
+  email: string;
+};
+
+export type ForgotPasswordFormState = ActionFormState<
+  ForgotPasswordFields,
+  ForgotPasswordValues
+> & {
+  success?: boolean;
+};
+
+export const initialForgotPasswordFormState: ForgotPasswordFormState = {};
+
+type ResetPasswordFields = "password" | "confirmPassword";
+
+type ResetPasswordValues = Record<string, never>;
+
+export type ResetPasswordFormState = ActionFormState<
+  ResetPasswordFields,
+  ResetPasswordValues
+> & {
+  success?: boolean;
+};
+
+export const initialResetPasswordFormState: ResetPasswordFormState = {};

@@ -2,16 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -40,11 +31,7 @@ function DeleteSubmitButton() {
   );
 }
 
-export function DeleteCategoryDialog({
-  action = deleteCategory,
-  id,
-  name,
-}: DeleteCategoryDialogProps) {
+export function DeleteCategoryDialog({ action = deleteCategory, id, name }: DeleteCategoryDialogProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -55,10 +42,7 @@ export function DeleteCategoryDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Hapus kategori?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {name} akan dihapus. Makanan yang memakainya tetap ada, tetapi
-            kategorinya akan dilepas.
-          </AlertDialogDescription>
+          <AlertDialogDescription>{name} akan dihapus. Menu yang memakainya tetap ada, tetapi kategorinya akan dilepas.</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Batal</AlertDialogCancel>

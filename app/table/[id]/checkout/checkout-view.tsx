@@ -15,6 +15,7 @@ import { paymentMethods, type PaymentMethod } from "@/lib/order";
 import { cn } from "@/lib/utils";
 
 import { getCartTotals, getTotalQuantity, saveOrder } from "../_components/customer-cart";
+import { useCustomerDemoFlow } from "../_components/customer-demo-flow";
 import { CustomerPageHeader, CustomerPageShell, EmptyCustomerState, OrderItemRow, OrderTotals } from "../_components/customer-order-ui";
 import { createCustomerOrder } from "../_components/order-actions";
 import { useCartItems } from "../_components/customer-store-hooks";
@@ -24,10 +25,7 @@ const paymentMethodOptions: {
   label: PaymentMethod;
   value: PaymentMethod;
 }[] = paymentMethods.map((method) => ({
-  description:
-    method === "QRIS"
-      ? "Bayar dengan kode QRIS."
-      : "Bayar melalui dompet digital.",
+  description: method === "QRIS" ? "Bayar dengan kode QRIS." : "Bayar melalui dompet digital.",
   label: method,
   value: method,
 }));
@@ -40,6 +38,7 @@ type CheckoutViewProps = {
 export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
   const router = useRouter();
   const items = useCartItems(tableId);
+  const { buildHref } = useCustomerDemoFlow();
   const paymentTriggerRef = React.useRef<HTMLButtonElement | null>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [method, setMethod] = React.useState<PaymentMethod | null>(null);
@@ -81,7 +80,7 @@ export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
 
       saveOrder(result.order);
 
-      router.push(`/table/${tableId}/checkout/payment/qris`);
+      router.push(buildHref(`/table/${tableId}/checkout/payment/qris`));
     });
   }
 
@@ -89,7 +88,7 @@ export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
     return (
       <CustomerPageShell>
         <CustomerPageHeader backHref={`/table/${tableId}/cart`} description="Keranjang meja ini masih kosong." tableNumber={tableNumber} title="Checkout" />
-        <EmptyCustomerState description="Tambahkan makanan sebelum melanjutkan checkout." href={`/table/${tableId}/menu`} label="Lihat menu" title="Belum ada pesanan" />
+        <EmptyCustomerState description="Tambahkan menu sebelum melanjutkan checkout." href={`/table/${tableId}/menu`} label="Lihat menu" title="Belum ada pesanan" />
       </CustomerPageShell>
     );
   }
@@ -107,11 +106,7 @@ export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {items.map((item, index) => (
-              <OrderItemRow
-                imageLoading={index < 2 ? "eager" : "lazy"}
-                item={item}
-                key={item.id}
-              />
+              <OrderItemRow imageLoading={index < 2 ? "eager" : "lazy"} item={item} key={item.id} />
             ))}
           </CardContent>
         </Card>
@@ -198,7 +193,7 @@ export function CheckoutView({ tableId, tableNumber }: CheckoutViewProps) {
               )}
             </Button>
             <Button asChild variant="outline">
-              <Link href={`/table/${tableId}/cart`}>Ubah keranjang</Link>
+              <Link href={buildHref(`/table/${tableId}/cart`)}>Ubah keranjang</Link>
             </Button>
           </CardContent>
         </Card>
